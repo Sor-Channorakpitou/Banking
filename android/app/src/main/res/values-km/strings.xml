@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lime</string>
+
+    <string name="back">ថយក្រោយ</string>
+    <string name="retry">ព្យាយាមម្តងទៀត</string>
+    <string name="done">រួចរាល់</string>
+    <string name="error_network">មិនអាចភ្ជាប់ទៅធនាគារបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត និងអាសយដ្ឋានម៉ាស៊ីនមេ។</string>
+    <string name="error_generic">មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀត។</string>
+    <string name="coming_soon">ឆាប់ៗនេះ</string>
+    <string name="coming_soon_body">%1$s នឹងមកដល់ក្នុងកំណែបន្ទាប់។</string>
+    <string name="notifications">ការជូនដំណឹង</string>
+    <string name="language_switch">ខ្មែរ | EN</string>
+
+    <string name="login_title">ចូលគណនី</string>
+    <string name="login_subtitle">សូមស្វាគមន៍មកកាន់ Lime</string>
+    <string name="email">អ៊ីមែល</string>
+    <string name="password">ពាក្យសម្ងាត់</string>
+    <string name="sign_in">ចូល</string>
+    <string name="server_address">អាសយដ្ឋានម៉ាស៊ីនមេ</string>
+    <string name="change_server">ប្តូរម៉ាស៊ីនមេ</string>
+    <string name="no_account_yet">ថ្មីនៅទីនេះ? បង្កើតគណនី</string>
+    <string name="register_title">បង្កើតគណនីរបស់អ្នក</string>
+    <string name="full_name">ឈ្មោះពេញ</string>
+    <string name="create_account">បង្កើតគណនី</string>
+    <string name="have_account">មានគណនីរួចហើយ? ចូល</string>
+    <string name="password_rule">យ៉ាងតិច ៨ តួអក្សរ</string>
+
+    <string name="pin_create">បង្កើតលេខសម្ងាត់ ៦ ខ្ទង់</string>
+    <string name="pin_create_hint">អ្នកនឹងប្រើវាដើម្បីបើកកម្មវិធី។</string>
+    <string name="pin_confirm">បញ្ចូលលេខសម្ងាត់ម្តងទៀត</string>
+    <string name="pin_mismatch">លេខសម្ងាត់មិនដូចគ្នាទេ។ សូមព្យាយាមម្តងទៀត។</string>
+    <string name="pin_enter">បញ្ចូលលេខសម្ងាត់</string>
+    <string name="pin_wrong">លេខសម្ងាត់ខុស។ នៅសល់ %1$d ដងទៀត។</string>
+    <string name="welcome_back">សូមស្វាគមន៍ការត្រឡប់មកវិញ</string>
+    <string name="forgot_pin">ភ្លេចលេខសម្ងាត់?</string>
+    <string name="not_you">មិនមែន %1$s?</string>
+    <string name="delete_digit">លុប</string>
+
+    <string name="greeting_morning">អរុណសួស្តី</string>
+    <string name="greeting_afternoon">ទិវាសួស្តី</string>
+    <string name="greeting_evening">សាយ័ណ្ហសួស្តី</string>
+    <string name="available_balance">សមតុល្យដែលអាចប្រើបាន</string>
+    <string name="rate_today">អត្រាប្តូរប្រាក់ USD/KHR ថ្ងៃនេះ</string>
+    <string name="rate_buy_sell">ទិញ %1$s · លក់ %2$s</string>
+    <string name="hide_balance">លាក់សមតុល្យ</string>
+    <string name="show_balance">បង្ហាញសមតុល្យ</string>
+    <string name="recent_activity">សកម្មភាពថ្មីៗ</string>
+    <string name="view_all">មើលទាំងអស់</string>
+    <string name="no_activity">មិនទាន់មានប្រតិបត្តិការនៅឡើយ</string>
+    <string name="no_account_title">អ្នកមិនទាន់មានគណនី %1$s នៅឡើយ</string>
+    <string name="open_one">បើកគណនី</string>
+
+    <string name="svc_transfer">ផ្ទេរប្រាក់</string>
+    <string name="svc_my_qr">QR របស់ខ្ញុំ</string>
+    <string name="svc_exchange">ប្តូរប្រាក់</string>
+    <string name="svc_payees">អ្នកទទួល</string>
+    <string name="svc_accounts">គណនី</string>
+    <string name="svc_statements">របាយការណ៍</string>
+    <string name="svc_open_account">បើកគណនី</string>
+    <string name="svc_security">សុវត្ថិភាព</string>
+
+    <string name="nav_home">ទំព័រដើម</string>
+    <string name="nav_accounts">គណនី</string>
+    <string name="nav_scan">ស្កេន QR</string>
+    <string name="nav_payees">អ្នកទទួល</string>
+    <string name="nav_profile">ប្រវត្តិរូប</string>
+
+    <string name="accounts_title">គណនីរបស់ខ្ញុំ</string>
+    <string name="account_label">គណនី %1$s</string>
+    <string name="status_ACTIVE">សកម្ម</string>
+    <string name="status_FROZEN">ត្រូវបានបង្កក</string>
+    <string name="status_CLOSED">បានបិទ</string>
+    <string name="copy_number">ចម្លងលេខ</string>
+    <string name="copied">បានចម្លងលេខគណនី</string>
+    <string name="statement">របាយការណ៍</string>
+    <string name="share_qr">ចែករំលែក QR</string>
+    <string name="filter_all">ទាំងអស់</string>
+    <string name="filter_in">ប្រាក់ចូល</string>
+    <string name="filter_out">ប្រាក់ចេញ</string>
+    <string name="today">ថ្ងៃនេះ</string>
+    <string name="yesterday">ម្សិលមិញ</string>
+    <string name="type_DEPOSIT">ដាក់ប្រាក់</string>
+    <string name="type_WITHDRAWAL">ដកប្រាក់</string>
+    <string name="type_TRANSFER">ផ្ទេរប្រាក់</string>
+    <string name="type_EXCHANGE">ប្តូរប្រាក់</string>
+
+    <string name="open_account_title">បើកគណនី</string>
+    <string name="choose_currency">ជ្រើសរើសរូបិយប័ណ្ណ</string>
+    <string name="currency_USD">ដុល្លារអាមេរិក</string>
+    <string name="currency_KHR">ប្រាក់រៀល</string>
+    <string name="currency_EUR">អឺរ៉ូ</string>
+    <string name="open_account_button">បើកគណនី</string>
+    <string name="account_opened">គណនី %1$s របស់អ្នករួចរាល់ហើយ</string>
+
+    <string name="transfer_title">ផ្ទេរប្រាក់ថ្មី</string>
+    <string name="from">ពី</string>
+    <string name="to_account_number">លេខគណនីអ្នកទទួល</string>
+    <string name="amount">ចំនួនទឹកប្រាក់</string>
+    <string name="description_optional">ការពិពណ៌នា (ស្រេចចិត្ត)</string>
+    <string name="fee">កម្រៃសេវា</string>
+    <string name="fee_none">គ្មាន</string>
+    <string name="balance_after">សមតុល្យបន្ទាប់ពីផ្ទេរ</string>
+    <string name="send_amount">ផ្ញើ %1$s</string>
+    <string name="transfer_done">បានផ្ញើប្រាក់</string>
+    <string name="transfer_done_body">%1$s ទៅគណនី %2$s</string>
+
+    <string name="exchange_title">ប្តូរប្រាក់</string>
+    <string name="you_sell">អ្នកលក់</string>
+    <string name="you_get">អ្នកទទួលបាន</string>
+    <string name="rate_applied">អត្រាដែលប្រើ</string>
+    <string name="exchange_amount">ប្តូរ %1$s</string>
+    <string name="exchange_done">ការប្តូរប្រាក់បានជោគជ័យ</string>
+    <string name="from_account_balance">ពីគណនី %1$s · %2$s</string>
+    <string name="to_account_balance">ទៅគណនី %1$s · %2$s</string>
+    <string name="need_both_accounts">សូមបើកគណនី USD និង KHR ដើម្បីប្តូរប្រាក់រវាងគណនីទាំងពីរ។</string>
+    <string name="swap">ប្តូររូបិយប័ណ្ណ</string>
+
+    <string name="statement_title">របាយការណ៍</string>
+    <string name="opening_balance">សមតុល្យដើមគ្រា</string>
+    <string name="money_in">ប្រាក់ចូល</string>
+    <string name="money_out">ប្រាក់ចេញ</string>
+    <string name="closing_balance">សមតុល្យចុងគ្រា</string>
+    <string name="no_entries_month">មិនមានប្រតិបត្តិការក្នុងខែនេះទេ</string>
+    <string name="previous_month">ខែមុន</string>
+    <string name="next_month">ខែបន្ទាប់</string>
+
+    <string name="receive_title">ទទួលប្រាក់</string>
+    <string name="receive_hint">អ្នកណាក៏អាចស្កេនកូដនេះ ដើម្បីយកលេខគណនីរបស់អ្នក</string>
+
+    <string name="security">សុវត្ថិភាព</string>
+    <string name="change_pin">ប្តូរលេខសម្ងាត់</string>
+    <string name="two_step">ការផ្ទៀងផ្ទាត់ពីរជំហាន</string>
+    <string name="fingerprint">ចូលដោយស្នាមម្រាមដៃ</string>
+    <string name="daily_limit">ដែនកំណត់ផ្ទេរប្រាក់ប្រចាំថ្ងៃ</string>
+    <string name="app_section">កម្មវិធី</string>
+    <string name="language">ភាសា</string>
+    <string name="language_value">ខ្មែរ</string>
+    <string name="log_out">ចាកចេញ</string>
+</resources>

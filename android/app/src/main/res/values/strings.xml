@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lime</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="retry">Try again</string>
+    <string name="done">Done</string>
+    <string name="error_network">Can\'t reach the bank. Check your connection and the server address.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="coming_soon">Coming soon</string>
+    <string name="coming_soon_body">%1$s is on its way in the next update.</string>
+    <string name="notifications">Notifications</string>
+    <string name="language_switch">ខ្មែរ | EN</string>
+
+    <!-- Login / register -->
+    <string name="login_title">Sign in</string>
+    <string name="login_subtitle">Welcome to Lime</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign in</string>
+    <string name="server_address">Server address</string>
+    <string name="change_server">Change server</string>
+    <string name="no_account_yet">New here? Create an account</string>
+    <string name="register_title">Create your account</string>
+    <string name="full_name">Full name</string>
+    <string name="create_account">Create account</string>
+    <string name="have_account">Already registered? Sign in</string>
+    <string name="password_rule">At least 8 characters</string>
+
+    <!-- PIN -->
+    <string name="pin_create">Create a 6-digit PIN</string>
+    <string name="pin_create_hint">You\'ll use it to open the app.</string>
+    <string name="pin_confirm">Enter the PIN again</string>
+    <string name="pin_mismatch">The PINs don\'t match. Try again.</string>
+    <string name="pin_enter">Enter your PIN</string>
+    <string name="pin_wrong">Wrong PIN. %1$d tries left.</string>
+    <string name="welcome_back">Welcome back</string>
+    <string name="forgot_pin">Forgot PIN?</string>
+    <string name="not_you">Not %1$s?</string>
+    <string name="delete_digit">Delete</string>
+
+    <!-- Home -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="available_balance">Available balance</string>
+    <string name="rate_today">USD/KHR today</string>
+    <string name="rate_buy_sell">Buy %1$s · Sell %2$s</string>
+    <string name="hide_balance">Hide balance</string>
+    <string name="show_balance">Show balance</string>
+    <string name="recent_activity">Recent activity</string>
+    <string name="view_all">View all</string>
+    <string name="no_activity">No activity yet</string>
+    <string name="no_account_title">You don\'t have a %1$s account yet</string>
+    <string name="open_one">Open one</string>
+
+    <string name="svc_transfer">Transfer</string>
+    <string name="svc_my_qr">My QR</string>
+    <string name="svc_exchange">Exchange</string>
+    <string name="svc_payees">Payees</string>
+    <string name="svc_accounts">Accounts</string>
+    <string name="svc_statements">Statements</string>
+    <string name="svc_open_account">Open account</string>
+    <string name="svc_security">Security</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_accounts">Accounts</string>
+    <string name="nav_scan">Scan QR</string>
+    <string name="nav_payees">Payees</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Accounts -->
+    <string name="accounts_title">My accounts</string>
+    <string name="account_label">%1$s account</string>
+    <string name="status_ACTIVE">Active</string>
+    <string name="status_FROZEN">Frozen</string>
+    <string name="status_CLOSED">Closed</string>
+    <string name="copy_number">Copy number</string>
+    <string name="copied">Account number copied</string>
+    <string name="statement">Statement</string>
+    <string name="share_qr">Share QR</string>
+    <string name="filter_all">All</string>
+    <string name="filter_in">Money in</string>
+    <string name="filter_out">Money out</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="type_DEPOSIT">Deposit</string>
+    <string name="type_WITHDRAWAL">Withdrawal</string>
+    <string name="type_TRANSFER">Transfer</string>
+    <string name="type_EXCHANGE">Exchange</string>
+
+    <!-- Open account -->
+    <string name="open_account_title">Open an account</string>
+    <string name="choose_currency">Choose a currency</string>
+    <string name="currency_USD">US dollar</string>
+    <string name="currency_KHR">Cambodian riel</string>
+    <string name="currency_EUR">Euro</string>
+    <string name="open_account_button">Open account</string>
+    <string name="account_opened">Your %1$s account is ready</string>
+
+    <!-- Transfer -->
+    <string name="transfer_title">New transfer</string>
+    <string name="from">From</string>
+    <string name="to_account_number">To account number</string>
+    <string name="amount">Amount</string>
+    <string name="description_optional">Description (optional)</string>
+    <string name="fee">Fee</string>
+    <string name="fee_none">None</string>
+    <string name="balance_after">Balance after</string>
+    <string name="send_amount">Send %1$s</string>
+    <string name="transfer_done">Money sent</string>
+    <string name="transfer_done_body">%1$s to account %2$s</string>
+
+    <!-- Exchange -->
+    <string name="exchange_title">Exchange</string>
+    <string name="you_sell">You sell</string>
+    <string name="you_get">You get</string>
+    <string name="rate_applied">Rate applied</string>
+    <string name="exchange_amount">Exchange %1$s</string>
+    <string name="exchange_done">Exchange complete</string>
+    <string name="from_account_balance">From %1$s account · %2$s</string>
+    <string name="to_account_balance">To %1$s account · %2$s</string>
+    <string name="need_both_accounts">Open a USD and a KHR account to exchange between them.</string>
+    <string name="swap">Swap currencies</string>
+
+    <!-- Statement -->
+    <string name="statement_title">Statement</string>
+    <string name="opening_balance">Opening balance</string>
+    <string name="money_in">Money in</string>
+    <string name="money_out">Money out</string>
+    <string name="closing_balance">Closing balance</string>
+    <string name="no_entries_month">No transactions this month</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+
+    <!-- Receive -->
+    <string name="receive_title">Receive money</string>
+    <string name="receive_hint">Anyone can scan this to get your account number</string>
+
+    <!-- Profile -->
+    <string name="security">Security</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="two_step">Two-step verification</string>
+    <string name="fingerprint">Fingerprint login</string>
+    <string name="daily_limit">Daily transfer limit</string>
+    <string name="app_section">App</string>
+    <string name="language">Language</string>
+    <string name="language_value">English</string>
+    <string name="log_out">Log out</string>
+</resources>
