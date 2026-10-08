@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.ParcelFileDescriptor
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
