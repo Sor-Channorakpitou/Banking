@@ -10,3 +10,14 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+app:
+  jwt:
+    # Base64 of 32 random bytes (256 bits, the minimum for HS256). DEV ONLY.
+    # Generate your own with: openssl rand -base64 32
+    secret: nFHnlzq826XLyKQa10wclm0Y8jML+5T5W3R/jfjs9QU=
+  # First admin account, created at startup if no user has this email.
+  admin:
+    email: admin@bank.local
+    password: Admin123!
+    full-name: Bank Administrator

@@ -1,7 +1,16 @@
-# Real database. Values come from environment variables, with defaults that match
-# docker-compose.yml so `docker compose up -d` + this profile works out of the box.
+# Real database. Values come from environment variables. The DB defaults match
+# docker-compose.yml; JWT_SECRET has no default and must always be provided.
 spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/bank}
     username: ${DB_USERNAME:bank}
     password: ${DB_PASSWORD:bank}
+
+app:
+  jwt:
+    # No default on purpose: the app refuses to start without a real secret.
+    secret: ${JWT_SECRET}
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+    full-name: ${ADMIN_FULL_NAME:Bank Administrator}
