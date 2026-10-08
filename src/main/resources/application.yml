@@ -1,0 +1,38 @@
+# Settings shared by every profile. Profile files (application-<profile>.yml) only hold
+# what differs between environments, mostly the datasource.
+spring:
+  application:
+    name: core-banking
+  profiles:
+    # "dev" (H2) unless SPRING_PROFILES_ACTIVE says otherwise, e.g. "postgres".
+    default: dev
+  jpa:
+    # Flyway owns the schema. Hibernate only checks that the entities match it and
+    # fails at startup if they drift apart, instead of silently altering tables.
+    hibernate:
+      ddl-auto: validate
+    # Don't keep a DB session open while the JSON response is rendered. Lazy loading
+    # outside the service layer becomes an error you see early, not a hidden N+1.
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only health for now; metrics are added in Phase 6.
+        include: health
+  endpoint:
+    health:
+      show-details: always
