@@ -44,7 +44,16 @@ import androidx.navigation.navArgument
 import com.example.bank.mobile.R
 import com.example.bank.mobile.container
 import com.example.bank.mobile.data.StartPoint
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import com.example.bank.mobile.data.ApiException
 import com.example.bank.mobile.ui.screens.AccountDetailScreen
+import com.example.bank.mobile.ui.screens.ChangePasswordScreen
+import com.example.bank.mobile.ui.screens.ForgotPasswordScreen
+import com.example.bank.mobile.ui.screens.PayeesScreen
+import com.example.bank.mobile.ui.screens.TwoStepScreen
+import com.example.bank.mobile.ui.screens.VerifyEmailScreen
+import kotlinx.coroutines.launch
 import com.example.bank.mobile.ui.screens.AccountsScreen
 import com.example.bank.mobile.ui.screens.ComingSoonScreen
 import com.example.bank.mobile.ui.screens.CreatePinScreen
@@ -69,7 +78,12 @@ private object Routes {
     const val ACCOUNT = "account/{id}"
     const val STATEMENT = "statement/{id}"
     const val RECEIVE = "receive/{id}"
-    const val TRANSFER = "transfer?from={from}"
+    const val TRANSFER = "transfer?from={from}&to={to}&amount={amount}"
+    const val PAYEES = "payees"
+    const val VERIFY_EMAIL = "verify-email"
+    const val FORGOT_PASSWORD = "forgot-password"
+    const val TWO_STEP = "two-step"
+    const val CHANGE_PASSWORD = "change-password"
     const val EXCHANGE = "exchange"
     const val OPEN_ACCOUNT = "open-account"
     const val COMING_SOON = "coming-soon/{feature}"
@@ -84,7 +98,8 @@ private fun NavHostController.restartAt(route: String) = navigate(route) {
 @Composable
 fun AppNavigation(start: StartPoint) {
     val nav = rememberNavController()
-    val session = LocalContext.current.container.session
+    val container = LocalContext.current.container
+    val session = container.session
 
     // Refresh token expired or revoked: back to sign-in from wherever we are.
     LaunchedEffect(Unit) { session.signedOut.collect { nav.restartAt(Routes.SIGN_IN) } }
@@ -95,12 +110,47 @@ fun AppNavigation(start: StartPoint) {
         StartPoint.UNLOCK -> Routes.UNLOCK
     }
     val comingSoon: (String) -> Unit = { nav.navigate("coming-soon/" + Uri.encode(it)) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val scanFailed = stringResource(R.string.scan_failed)
+
+    // Scan QR: Google's scanner reads the code, the bank checks it (checksum, account
+    // still open), and a transfer opens with the recipient and amount filled in.
+    val scanAndPay: () -> Unit = {
+        scope.launch {
+            try {
+                val payload = scanQrCode(context) ?: return@launch
+                val qr = container.repository.decodeQr(payload)
+                val amount = qr.amount?.toPlainString()?.let { "&amount=$it" } ?: ""
+                nav.navigate("transfer?to=${qr.accountNumber}$amount")
+            } catch (e: Exception) {
+                Toast.makeText(context, (e as? ApiException)?.message ?: scanFailed, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
     val backStack by nav.currentBackStackEntryAsState()
     val tab = backStack?.destination?.route
 
     Column(Modifier.fillMaxSize()) {
         NavHost(nav, startDestination = startRoute, modifier = Modifier.weight(1f)) {
-            composable(Routes.SIGN_IN) { SignInScreen(onSignedIn = { nav.restartAt(Routes.CREATE_PIN) }) }
+            composable(Routes.SIGN_IN) {
+                SignInScreen(
+                    onSignedIn = { verified -> nav.restartAt(if (verified) Routes.CREATE_PIN else Routes.VERIFY_EMAIL) },
+                    onForgotPassword = { nav.navigate(Routes.FORGOT_PASSWORD) },
+                )
+            }
+            composable(Routes.VERIFY_EMAIL) {
+                VerifyEmailScreen(onDone = {
+                    // Right after sign-in there is no PIN yet; from Home just go back.
+                    if (nav.previousBackStackEntry != null) nav.popBackStack() else nav.restartAt(Routes.CREATE_PIN)
+                })
+            }
+            composable(Routes.FORGOT_PASSWORD) { ForgotPasswordScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.TWO_STEP) { TwoStepScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.CHANGE_PASSWORD) {
+                ChangePasswordScreen(onBack = { nav.popBackStack() }, onSignInAgain = { nav.restartAt(Routes.SIGN_IN) })
+            }
+            composable(Routes.PAYEES) { PayeesScreen(onPay = { nav.navigate("transfer?to=$it") }) }
             composable(Routes.CREATE_PIN) {
                 CreatePinScreen(onDone = {
                     if (nav.previousBackStackEntry != null) nav.popBackStack() else nav.restartAt(Routes.HOME)
@@ -120,13 +170,20 @@ fun AppNavigation(start: StartPoint) {
                     onOpenAccount = { nav.navigate(Routes.OPEN_ACCOUNT) },
                     onComingSoon = comingSoon,
                     onProfile = { nav.navigateTab(Routes.PROFILE) },
+                    onPayees = { nav.navigateTab(Routes.PAYEES) },
+                    onVerifyEmail = { nav.navigate(Routes.VERIFY_EMAIL) },
                 )
             }
             composable(Routes.ACCOUNTS) {
                 AccountsScreen(onAccount = { nav.navigate("account/$it") }, onOpenAccount = { nav.navigate(Routes.OPEN_ACCOUNT) })
             }
             composable(Routes.PROFILE) {
-                ProfileScreen(onChangePin = { nav.navigate(Routes.CREATE_PIN) }, onSignedOut = { nav.restartAt(Routes.SIGN_IN) })
+                ProfileScreen(
+                    onChangePin = { nav.navigate(Routes.CREATE_PIN) },
+                    onTwoStep = { nav.navigate(Routes.TWO_STEP) },
+                    onChangePassword = { nav.navigate(Routes.CHANGE_PASSWORD) },
+                    onSignedOut = { nav.restartAt(Routes.SIGN_IN) },
+                )
             }
             composable(Routes.ACCOUNT, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
                 val id = entry.arguments!!.getLong("id")
@@ -145,10 +202,19 @@ fun AppNavigation(start: StartPoint) {
             }
             composable(
                 Routes.TRANSFER,
-                arguments = listOf(navArgument("from") { type = NavType.LongType; defaultValue = -1L }),
+                arguments = listOf(
+                    navArgument("from") { type = NavType.LongType; defaultValue = -1L },
+                    navArgument("to") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("amount") { type = NavType.StringType; nullable = true; defaultValue = null },
+                ),
             ) { entry ->
-                val from = entry.arguments?.getLong("from")?.takeIf { it > 0 }
-                TransferScreen(fromAccountId = from, onBack = { nav.popBackStack() })
+                val args = entry.arguments
+                TransferScreen(
+                    fromAccountId = args?.getLong("from")?.takeIf { it > 0 },
+                    toAccountNumber = args?.getString("to"),
+                    presetAmount = args?.getString("amount"),
+                    onBack = { nav.popBackStack() },
+                )
             }
             composable(Routes.EXCHANGE) {
                 ExchangeScreen(onBack = { nav.popBackStack() }, onOpenAccount = { nav.navigate(Routes.OPEN_ACCOUNT) })
@@ -164,12 +230,8 @@ fun AppNavigation(start: StartPoint) {
             }
         }
 
-        if (tab in setOf(Routes.HOME, Routes.ACCOUNTS, Routes.PROFILE)) {
-            BottomBar(
-                current = tab,
-                onTab = { nav.navigateTab(it) },
-                onScan = comingSoon,
-            )
+        if (tab in setOf(Routes.HOME, Routes.ACCOUNTS, Routes.PAYEES, Routes.PROFILE)) {
+            BottomBar(current = tab, onTab = { nav.navigateTab(it) }, onScan = scanAndPay)
         }
     }
 }
@@ -184,14 +246,12 @@ private fun NavHostController.navigateTab(route: String) = navigate(route) {
 private data class Tab(val route: String?, @DrawableRes val icon: Int, @StringRes val label: Int)
 
 @Composable
-private fun BottomBar(current: String?, onTab: (String) -> Unit, onScan: (String) -> Unit) {
-    val scanLabel = stringResource(R.string.nav_scan)
-    val payeesLabel = stringResource(R.string.nav_payees)
+private fun BottomBar(current: String?, onTab: (String) -> Unit, onScan: () -> Unit) {
     val tabs = listOf(
         Tab(Routes.HOME, R.drawable.ic_home, R.string.nav_home),
         Tab(Routes.ACCOUNTS, R.drawable.ic_card, R.string.nav_accounts),
         Tab(null, R.drawable.ic_scan, R.string.nav_scan),
-        Tab("payees", R.drawable.ic_people, R.string.nav_payees),
+        Tab(Routes.PAYEES, R.drawable.ic_people, R.string.nav_payees),
         Tab(Routes.PROFILE, R.drawable.ic_user, R.string.nav_profile),
     )
     Column(Modifier.background(Color.White).navigationBarsPadding()) {
@@ -207,11 +267,7 @@ private fun BottomBar(current: String?, onTab: (String) -> Unit, onScan: (String
                     Modifier
                         .weight(1f)
                         .clickable(role = Role.Tab) {
-                            when (tab.route) {
-                                null -> onScan(scanLabel)
-                                "payees" -> onScan(payeesLabel)
-                                else -> onTab(tab.route)
-                            }
+                            if (tab.route == null) onScan() else onTab(tab.route)
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {

@@ -34,7 +34,7 @@ object BigDecimalSerializer : KSerializer<BigDecimal> {
     }
 }
 
-@Serializable data class LoginRequest(val email: String, val password: String)
+@Serializable data class LoginRequest(val email: String, val password: String, val totpCode: String? = null)
 @Serializable data class RegisterRequest(val fullName: String, val email: String, val password: String)
 @Serializable data class RefreshRequest(val refreshToken: String)
 
@@ -48,7 +48,49 @@ data class AuthResponse(
 )
 
 @Serializable
-data class UserResponse(val id: Long, val fullName: String, val email: String, val role: String)
+data class UserResponse(
+    val id: Long,
+    val fullName: String,
+    val email: String,
+    val role: String,
+    val emailVerified: Boolean = false,
+    val twoStepEnabled: Boolean = false,
+)
+
+@Serializable data class VerifyEmailRequest(val email: String, val code: String)
+@Serializable data class ForgotPasswordRequest(val email: String)
+@Serializable data class ResetPasswordRequest(val email: String, val code: String, val newPassword: String)
+@Serializable data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)
+@Serializable data class CodeRequest(val code: String)
+@Serializable data class TwoStepSetup(val secret: String, val otpauthUri: String)
+
+@Serializable data class Recipient(val accountNumber: String, val currency: String, val holderName: String)
+
+@Serializable data class PayeeRequest(val accountNumber: String, val nickname: String)
+
+@Serializable
+data class Payee(
+    val id: Long,
+    val nickname: String,
+    val accountNumber: String,
+    val currency: String? = null,
+    val holderName: String? = null,
+    val available: Boolean = true,
+)
+
+@Serializable
+data class PaymentQr(
+    val payload: String,
+    val accountNumber: String,
+    val currency: String,
+    val amount: Money? = null,
+    val holderName: String,
+)
+
+@Serializable data class DecodeQrRequest(val payload: String)
+
+@Serializable
+data class DailyLimit(val currency: String, val dailyLimit: Money? = null, val usedToday: Money, val remainingToday: Money? = null)
 
 @Serializable
 data class Account(

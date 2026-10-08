@@ -49,17 +49,37 @@ import com.example.bank.mobile.ui.components.Initial
 import com.example.bank.mobile.ui.components.InnerScreen
 import com.example.bank.mobile.ui.components.LimeCard
 import com.example.bank.mobile.ui.components.RowDivider
+import com.example.bank.mobile.ui.formatMoney
 import com.example.bank.mobile.ui.theme.Lime
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProfileScreen(onChangePin: () -> Unit, onSignedOut: () -> Unit) {
+fun ProfileScreen(
+    onChangePin: () -> Unit,
+    onTwoStep: () -> Unit,
+    onChangePassword: () -> Unit,
+    onSignedOut: () -> Unit,
+) {
     val context = LocalContext.current
     val session = context.container.session
     val scope = rememberCoroutineScope()
     val language = LocalConfiguration.current.locales[0].language
     var server by remember { mutableStateOf("") }
-    LaunchedEffect(Unit) { server = session.currentServer() }
+    var twoStepOn by remember { mutableStateOf<Boolean?>(null) }
+    var limitText by remember { mutableStateOf<String?>(null) }
+    val limitFormat = stringResource(R.string.limit_value)
+    LaunchedEffect(Unit) {
+        server = session.currentServer()
+        val repository = context.container.repository
+        twoStepOn = runCatching { repository.me().twoStepEnabled }.getOrNull()
+        limitText = runCatching {
+            val account = repository.accounts().firstOrNull { it.currency == "USD" && it.status == "ACTIVE" }
+                ?: return@runCatching null
+            val limit = repository.limits(account.id)
+            val max = limit.dailyLimit ?: return@runCatching null
+            String.format(limitFormat, formatMoney(limit.remainingToday ?: max, limit.currency), formatMoney(max, limit.currency))
+        }.getOrNull()
+    }
 
     Column(
         Modifier
@@ -87,11 +107,17 @@ fun ProfileScreen(onChangePin: () -> Unit, onSignedOut: () -> Unit) {
         LimeCard(Modifier.padding(horizontal = 20.dp).fillMaxWidth(), padding = PaddingValues(0.dp)) {
             SettingRow(R.drawable.ic_lock, stringResource(R.string.change_pin), onClick = onChangePin)
             RowDivider()
-            SettingRow(R.drawable.ic_check, stringResource(R.string.two_step), trailing = stringResource(R.string.coming_soon))
+            SettingRow(R.drawable.ic_lock, stringResource(R.string.change_password), onClick = onChangePassword)
+            RowDivider()
+            SettingRow(
+                R.drawable.ic_check, stringResource(R.string.two_step),
+                trailing = twoStepOn?.let { stringResource(if (it) R.string.on else R.string.off) },
+                onClick = onTwoStep,
+            )
             RowDivider()
             SettingRow(R.drawable.ic_user, stringResource(R.string.fingerprint), trailing = stringResource(R.string.coming_soon))
             RowDivider()
-            SettingRow(R.drawable.ic_transfer, stringResource(R.string.daily_limit), trailing = stringResource(R.string.coming_soon))
+            SettingRow(R.drawable.ic_transfer, stringResource(R.string.daily_limit), trailing = limitText ?: "—")
         }
 
         SectionTitle(stringResource(R.string.app_section))

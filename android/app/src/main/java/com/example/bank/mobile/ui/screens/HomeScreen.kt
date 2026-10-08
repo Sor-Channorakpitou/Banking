@@ -76,6 +76,7 @@ class HomeViewModel(private val repository: BankRepository) : ViewModel() {
     var recent by mutableStateOf<List<AccountTransaction>>(emptyList()); private set
     var error by mutableStateOf<Throwable?>(null); private set
     var balanceHidden by mutableStateOf(false)
+    var emailVerified by mutableStateOf(true); private set
 
     val selected: Account? get() = accounts.firstOrNull { it.currency == currency && it.status != "CLOSED" }
 
@@ -83,6 +84,7 @@ class HomeViewModel(private val repository: BankRepository) : ViewModel() {
         try {
             accounts = repository.accounts()
             error = null
+            emailVerified = runCatching { repository.me().emailVerified }.getOrDefault(true)
             if (selected == null) accounts.firstOrNull { it.status != "CLOSED" }?.let { currency = it.currency }
             rate = runCatching { repository.rates() }.getOrNull()
                 ?.firstOrNull { it.baseCurrency == "USD" && it.quoteCurrency == "KHR" }
@@ -135,6 +137,8 @@ fun HomeScreen(
     onOpenAccount: () -> Unit,
     onComingSoon: (String) -> Unit,
     onProfile: () -> Unit,
+    onPayees: () -> Unit,
+    onVerifyEmail: () -> Unit,
 ) {
     val context = LocalContext.current
     val container = context.container
@@ -193,15 +197,28 @@ fun HomeScreen(
         BalanceCard(vm, onAccount, onOpenAccount, Modifier.padding(horizontal = 20.dp).pullUp(56.dp))
 
         vm.error?.let { ErrorText(errorMessage(it), Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) }
+        if (!vm.emailVerified) {
+            Text(
+                stringResource(R.string.verify_banner),
+                color = Lime.GreenDark,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Lime.GreenTint)
+                    .clickable(role = Role.Button, onClick = onVerifyEmail)
+                    .padding(14.dp),
+            )
+        }
 
         // Services
         val selectedId = vm.selected?.id
-        val payees = stringResource(R.string.svc_payees)
         val services = listOf(
             Triple(R.drawable.ic_transfer, R.string.svc_transfer) { onTransfer() },
             Triple(R.drawable.ic_qr, R.string.svc_my_qr) { selectedId?.let(onMyQr) ?: onOpenAccount() },
             Triple(R.drawable.ic_exchange, R.string.svc_exchange) { onExchange() },
-            Triple(R.drawable.ic_people, R.string.svc_payees) { onComingSoon(payees) },
+            Triple(R.drawable.ic_people, R.string.svc_payees) { onPayees() },
             Triple(R.drawable.ic_card, R.string.svc_accounts) { onAccounts() },
             Triple(R.drawable.ic_statement, R.string.svc_statements) { selectedId?.let(onStatements) ?: onOpenAccount() },
             Triple(R.drawable.ic_plus, R.string.svc_open_account) { onOpenAccount() },

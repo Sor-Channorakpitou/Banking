@@ -57,6 +57,7 @@ import com.example.bank.mobile.data.Account
 import com.example.bank.mobile.data.BankRepository
 import com.example.bank.mobile.data.ExchangeQuote
 import com.example.bank.mobile.data.ExchangeRequest
+import com.example.bank.mobile.data.PaymentQr
 import com.example.bank.mobile.data.Statement
 import com.example.bank.mobile.data.TransferRequest
 import com.example.bank.mobile.ui.cleanAmountInput
@@ -79,6 +80,7 @@ import com.example.bank.mobile.ui.formatRate
 import com.example.bank.mobile.ui.formatSigned
 import com.example.bank.mobile.ui.localDate
 import com.example.bank.mobile.ui.parseAmount
+import com.example.bank.mobile.ui.qrBitmap
 import com.example.bank.mobile.ui.shortDate
 import com.example.bank.mobile.ui.theme.Lime
 import com.example.bank.mobile.ui.theme.MoneyStyle
@@ -174,6 +176,16 @@ class TransferViewModel(private val repository: BankRepository) : ViewModel() {
      */
     private var idempotencyKey = BankRepository.newIdempotencyKey()
 
+    private var prefilled = false
+
+    /** From a payee or a scanned QR code: recipient (and amount) are filled in for the user. */
+    fun prefill(to: String?, amount: String?) {
+        if (prefilled) return
+        prefilled = true
+        to?.let { toNumber = it }
+        amount?.let { amountText = it }
+    }
+
     fun load(preferredId: Long?) = viewModelScope.launch {
         try {
             accounts = repository.accounts().filter { it.status == "ACTIVE" }
@@ -208,10 +220,14 @@ class TransferViewModel(private val repository: BankRepository) : ViewModel() {
 }
 
 @Composable
-fun TransferScreen(fromAccountId: Long?, onBack: () -> Unit) {
+fun TransferScreen(fromAccountId: Long?, toAccountNumber: String?, presetAmount: String?, onBack: () -> Unit) {
     val container = LocalContext.current.container
     val vm: TransferViewModel = viewModel { TransferViewModel(container.repository) }
-    LaunchedEffect(Unit) { vm.load(fromAccountId) }
+    LaunchedEffect(Unit) {
+        vm.prefill(toAccountNumber, presetAmount)
+        vm.load(fromAccountId)
+    }
+    val (recipient, recipientError) = rememberRecipient(vm.toNumber)
     val from = vm.from
     val amount = parseAmount(vm.amountText)
 
@@ -238,6 +254,7 @@ fun TransferScreen(fromAccountId: Long?, onBack: () -> Unit) {
                 keyboardType = KeyboardType.Number,
                 textStyle = MoneyStyle.Medium,
             )
+            RecipientLine(vm.toNumber, recipient, recipientError)
             LimeTextField(
                 vm.amountText,
                 { vm.amountText = cleanAmountInput(it, currencyDecimals(from?.currency ?: "USD")); vm.edited() },
@@ -261,7 +278,7 @@ fun TransferScreen(fromAccountId: Long?, onBack: () -> Unit) {
         PrimaryButton(
             text = stringResource(R.string.send_amount, amount?.let { formatMoney(it, from?.currency ?: "USD") } ?: ""),
             onClick = { vm.send() },
-            enabled = from != null && amount != null && vm.toNumber.length == 11,
+            enabled = from != null && amount != null && recipient != null,
             loading = vm.busy,
             modifier = Modifier.padding(20.dp).navigationBarsPadding(),
         )
@@ -542,14 +559,26 @@ private fun MonthArrow(icon: Int, description: String, onClick: () -> Unit) {
 
 // ------------------------------------------------------------------ receive (my QR)
 
-/** Draws a QR code into a bitmap; 'H' error correction leaves room for the logo in the middle. */
-private fun qrBitmap(content: String, size: Int = 640): Bitmap {
-    val matrix = QRCodeWriter().encode(
-        content, BarcodeFormat.QR_CODE, size, size,
-        mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 1),
+@Composable
+private fun AmountDialog(currency: String, onDismiss: () -> Unit, onSet: (java.math.BigDecimal) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.set_amount)) },
+        text = {
+            LimeTextField(text, { text = cleanAmountInput(it, currencyDecimals(currency)) }, stringResource(R.string.amount),
+                keyboardType = KeyboardType.Decimal, textStyle = MoneyStyle.Large, prefix = currencySymbol(currency))
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(enabled = parseAmount(text) != null, onClick = { parseAmount(text)?.let(onSet) }) {
+                Text(stringResource(R.string.save), color = Lime.Green, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Lime.Muted) }
+        },
+        containerColor = Lime.Card,
     )
-    val pixels = IntArray(size * size) { i -> if (matrix[i % size, i / size]) 0xFF0E1A2B.toInt() else 0xFFFFFFFF.toInt() }
-    return Bitmap.createBitmap(pixels, size, size, Bitmap.Config.ARGB_8888)
 }
 
 @Composable
@@ -557,10 +586,15 @@ fun ReceiveScreen(accountId: Long, onBack: () -> Unit) {
     val context = LocalContext.current
     val container = context.container
     var account by remember { mutableStateOf<Account?>(null) }
+    var qr by remember { mutableStateOf<PaymentQr?>(null) }
+    var amount by remember { mutableStateOf<java.math.BigDecimal?>(null) }
+    var askAmount by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Throwable?>(null) }
-    LaunchedEffect(accountId) {
+    LaunchedEffect(accountId, amount) {
         try {
-            account = container.repository.account(accountId)
+            if (account == null) account = container.repository.account(accountId)
+            qr = container.repository.paymentQr(accountId, amount)
+            error = null
         } catch (e: Exception) {
             error = e
         }
@@ -577,13 +611,17 @@ fun ReceiveScreen(accountId: Long, onBack: () -> Unit) {
             if (a != null) {
                 LimeCard(Modifier.fillMaxWidth(), padding = PaddingValues(24.dp)) {
                     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(container.session.fullName.uppercase(), style = MaterialTheme.typography.titleMedium)
+                        Text(qr?.holderName ?: container.session.fullName.uppercase(), style = MaterialTheme.typography.titleMedium)
                         Text(formatAccountNumber(a.accountNumber) + " · " + a.currency, style = MoneyStyle.Tiny,
                             color = Lime.Muted, modifier = Modifier.padding(top = 4.dp))
+                        qr?.amount?.let {
+                            Text(formatMoney(it, a.currency), style = MoneyStyle.Large, modifier = Modifier.padding(top = 8.dp))
+                        }
                         Spacer(Modifier.height(20.dp))
-                        val qr = remember(a.accountNumber) { qrBitmap(a.accountNumber).asImageBitmap() }
-                        Box(contentAlignment = Alignment.Center) {
-                            Image(qr, contentDescription = formatAccountNumber(a.accountNumber), modifier = Modifier.size(220.dp))
+                        val payload = qr?.payload
+                        if (payload == null) LoadingBox() else Box(contentAlignment = Alignment.Center) {
+                            val image = remember(payload) { qrBitmap(payload).asImageBitmap() }
+                            Image(image, contentDescription = formatAccountNumber(a.accountNumber), modifier = Modifier.size(220.dp))
                             Box(
                                 Modifier
                                     .size(48.dp)
@@ -601,8 +639,15 @@ fun ReceiveScreen(accountId: Long, onBack: () -> Unit) {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                SecondaryButton(stringResource(R.string.copy_number), { copyAccountNumber(context, a.accountNumber) },
-                    Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SecondaryButton(stringResource(if (amount == null) R.string.set_amount else R.string.any_amount),
+                        { if (amount == null) askAmount = true else amount = null }, Modifier.weight(1f))
+                    SecondaryButton(stringResource(R.string.copy_number), { copyAccountNumber(context, a.accountNumber) },
+                        Modifier.weight(1f))
+                }
+                if (askAmount) {
+                    AmountDialog(a.currency, onDismiss = { askAmount = false }, onSet = { amount = it; askAmount = false })
+                }
             }
         }
         account?.let { a ->

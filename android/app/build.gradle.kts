@@ -68,4 +68,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.zxing.core)
+    implementation(libs.play.services.code.scanner)
+    implementation(libs.kotlinx.coroutines.play.services)
 }

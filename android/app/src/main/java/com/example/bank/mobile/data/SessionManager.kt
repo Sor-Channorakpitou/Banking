@@ -34,6 +34,10 @@ class SessionManager(
     var email: String = ""
         private set
 
+    /** From the last sign-in; screens show a reminder until it is true. */
+    var emailVerified: Boolean = true
+        private set
+
     private val refreshLock = Mutex()
     private val _signedOut = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
@@ -54,19 +58,45 @@ class SessionManager(
 
     suspend fun currentServer(): String = store.load().serverUrl ?: server.url.toString()
 
-    suspend fun signIn(serverUrl: String, email: String, password: String) {
+    /**
+     * Throws ApiException with code TOTP_REQUIRED when two-step login is on and
+     * [totpCode] is missing: the screen then asks for the code and calls again.
+     */
+    suspend fun signIn(serverUrl: String, email: String, password: String, totpCode: String? = null) {
         useServer(serverUrl)
-        val auth = publicApi().login(LoginRequest(email.trim(), password))
+        val auth = call { publicApi().login(LoginRequest(email.trim(), password, totpCode)) }
         accessToken = auth.accessToken
-        val me = api().me()
+        val me = call { api().me() }
         store.saveLogin(auth.refreshToken, me.fullName, me.email)
         fullName = me.fullName
         this.email = me.email
+        emailVerified = me.emailVerified
+    }
+
+    suspend fun verifyEmail(code: String) {
+        call { publicApi().verifyEmail(VerifyEmailRequest(email, code)).orThrow() }
+        emailVerified = true
+    }
+
+    suspend fun forgotPassword(serverUrl: String, email: String) {
+        useServer(serverUrl)
+        call { publicApi().forgotPassword(ForgotPasswordRequest(email.trim())).orThrow() }
+    }
+
+    suspend fun resetPassword(email: String, code: String, newPassword: String) =
+        call { publicApi().resetPassword(ResetPasswordRequest(email.trim(), code, newPassword)).orThrow() }
+
+    /** Refreshes the cached profile flags (e.g. after unlocking with the PIN). */
+    suspend fun refreshProfile() {
+        runCatching { call { api().me() } }.onSuccess { me ->
+            fullName = me.fullName
+            emailVerified = me.emailVerified
+        }
     }
 
     suspend fun register(serverUrl: String, fullName: String, email: String, password: String) {
         useServer(serverUrl)
-        publicApi().register(RegisterRequest(fullName.trim(), email.trim(), password))
+        call { publicApi().register(RegisterRequest(fullName.trim(), email.trim(), password)) }
         signIn(serverUrl, email, password)
     }
 

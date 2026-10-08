@@ -77,7 +77,7 @@ private fun BankMark(size: Int = 64) {
 
 /** Email + password sign-in, with a switch to registration. */
 @Composable
-fun SignInScreen(onSignedIn: () -> Unit) {
+fun SignInScreen(onSignedIn: (emailVerified: Boolean) -> Unit, onForgotPassword: () -> Unit) {
     val session = LocalContext.current.container.session
     val scope = rememberCoroutineScope()
     var registering by remember { mutableStateOf(false) }
@@ -88,6 +88,8 @@ fun SignInScreen(onSignedIn: () -> Unit) {
     var showServer by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Throwable?>(null) }
+    var needsTotp by remember { mutableStateOf(false) }
+    var totp by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { server = session.currentServer() }
 
@@ -126,6 +128,13 @@ fun SignInScreen(onSignedIn: () -> Unit) {
                 visualTransformation = PasswordVisualTransformation(),
                 supportingText = if (registering) stringResource(R.string.password_rule) else null,
             )
+            if (needsTotp) {
+                LimeTextField(
+                    totp, { totp = it.filter(Char::isDigit).take(6) }, stringResource(R.string.code),
+                    keyboardType = KeyboardType.NumberPassword,
+                    supportingText = stringResource(R.string.two_step_prompt),
+                )
+            }
             if (showServer) {
                 LimeTextField(server, { server = it.trim() }, stringResource(R.string.server_address), keyboardType = KeyboardType.Uri)
             }
@@ -142,8 +151,10 @@ fun SignInScreen(onSignedIn: () -> Unit) {
                         error = null
                         try {
                             if (registering) session.register(server, fullName, email, password)
-                            else session.signIn(server, email, password)
-                            onSignedIn()
+                            else session.signIn(server, email, password, totp.takeIf { needsTotp && it.length == 6 })
+                            onSignedIn(session.emailVerified)
+                        } catch (e: ApiException) {
+                            if (e.code == "TOTP_REQUIRED") needsTotp = true else error = e
                         } catch (e: Exception) {
                             error = e
                         } finally {
@@ -163,6 +174,17 @@ fun SignInScreen(onSignedIn: () -> Unit) {
                     .clickable(role = Role.Button) { registering = !registering; error = null }
                     .padding(12.dp),
             )
+            if (!registering) {
+                Text(
+                    stringResource(R.string.forgot_password),
+                    color = Lime.Muted,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(role = Role.Button, onClick = onForgotPassword)
+                        .padding(8.dp),
+                )
+            }
             Text(
                 stringResource(R.string.change_server),
                 color = Lime.Muted,

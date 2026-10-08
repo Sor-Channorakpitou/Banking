@@ -136,7 +136,7 @@
 
     <!-- Receive -->
     <string name="receive_title">Receive money</string>
-    <string name="receive_hint">Anyone can scan this to get your account number</string>
+    <string name="receive_hint">Scan this with Lime to pay into this account</string>
 
     <!-- Profile -->
     <string name="security">Security</string>
@@ -148,4 +148,49 @@
     <string name="language">Language</string>
     <string name="language_value">English</string>
     <string name="log_out">Log out</string>
+
+    <!-- Security, payees and QR -->
+    <string name="verify_title">Verify your email</string>
+    <string name="verify_body">We sent a 6-digit code to %1$s.</string>
+    <string name="code">Code</string>
+    <string name="verify_button">Verify</string>
+    <string name="resend_code">Send a new code</string>
+    <string name="code_sent">A new code is on its way</string>
+    <string name="later">Later</string>
+    <string name="verify_banner">Verify your email to send money</string>
+    <string name="two_step_prompt">Enter the 6-digit code from your authenticator app</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="reset_title">Reset password</string>
+    <string name="send_code">Send code</string>
+    <string name="new_password">New password</string>
+    <string name="reset_button">Set new password</string>
+    <string name="reset_done">Password changed. Sign in with the new one.</string>
+    <string name="reset_sent">If %1$s has an account, a code is on its way.</string>
+    <string name="recipient_checking">Checking…</string>
+    <string name="payees_title">Payees</string>
+    <string name="add_payee">Add payee</string>
+    <string name="nickname">Nickname</string>
+    <string name="no_payees">No saved payees yet</string>
+    <string name="payee_unavailable">Can\'t receive money now</string>
+    <string name="remove">Remove</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="set_amount">Set amount</string>
+    <string name="any_amount">Any amount</string>
+    <string name="scan_failed">Couldn\'t read that code</string>
+    <string name="change_password">Change password</string>
+    <string name="current_password">Current password</string>
+    <string name="password_changed">Password changed</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="two_step_step1">1. Add this key to an authenticator app (Google Authenticator, Microsoft Authenticator…), or scan the code.</string>
+    <string name="two_step_step2">2. Enter the 6-digit code it shows.</string>
+    <string name="turn_on">Turn on</string>
+    <string name="turn_off">Turn off</string>
+    <string name="two_step_is_on">Two-step verification is on. Signing in needs your password and a code from your app.</string>
+    <string name="two_step_disable_prompt">Enter a code from your authenticator app to turn it off.</string>
+    <string name="limit_value">%1$s left of %2$s today</string>
+    <string name="copy_key">Copy key</string>
+    <string name="key_copied">Key copied</string>
+    <string name="pay_title">Pay</string>
 </resources>

@@ -126,7 +126,7 @@
     <string name="next_month">ខែបន្ទាប់</string>
 
     <string name="receive_title">ទទួលប្រាក់</string>
-    <string name="receive_hint">អ្នកណាក៏អាចស្កេនកូដនេះ ដើម្បីយកលេខគណនីរបស់អ្នក</string>
+    <string name="receive_hint">ស្កេនកូដនេះដោយ Lime ដើម្បីបង់ប្រាក់ចូលគណនីនេះ</string>
 
     <string name="security">សុវត្ថិភាព</string>
     <string name="change_pin">ប្តូរលេខសម្ងាត់</string>
@@ -137,4 +137,49 @@
     <string name="language">ភាសា</string>
     <string name="language_value">ខ្មែរ</string>
     <string name="log_out">ចាកចេញ</string>
+
+    <!-- Security, payees and QR -->
+    <string name="verify_title">ផ្ទៀងផ្ទាត់អ៊ីមែលរបស់អ្នក</string>
+    <string name="verify_body">យើងបានផ្ញើលេខកូដ ៦ ខ្ទង់ទៅ %1$s។</string>
+    <string name="code">លេខកូដ</string>
+    <string name="verify_button">ផ្ទៀងផ្ទាត់</string>
+    <string name="resend_code">ផ្ញើលេខកូដថ្មី</string>
+    <string name="code_sent">លេខកូដថ្មីកំពុងផ្ញើទៅ</string>
+    <string name="later">ពេលក្រោយ</string>
+    <string name="verify_banner">សូមផ្ទៀងផ្ទាត់អ៊ីមែល ដើម្បីផ្ញើប្រាក់</string>
+    <string name="two_step_prompt">បញ្ចូលលេខកូដ ៦ ខ្ទង់ពីកម្មវិធីផ្ទៀងផ្ទាត់</string>
+    <string name="forgot_password">ភ្លេចពាក្យសម្ងាត់?</string>
+    <string name="reset_title">កំណត់ពាក្យសម្ងាត់ឡើងវិញ</string>
+    <string name="send_code">ផ្ញើលេខកូដ</string>
+    <string name="new_password">ពាក្យសម្ងាត់ថ្មី</string>
+    <string name="reset_button">កំណត់ពាក្យសម្ងាត់ថ្មី</string>
+    <string name="reset_done">បានប្តូរពាក្យសម្ងាត់។ សូមចូលដោយពាក្យសម្ងាត់ថ្មី។</string>
+    <string name="reset_sent">ប្រសិនបើ %1$s មានគណនី លេខកូដកំពុងផ្ញើទៅ។</string>
+    <string name="recipient_checking">កំពុងពិនិត្យ…</string>
+    <string name="payees_title">អ្នកទទួល</string>
+    <string name="add_payee">បន្ថែមអ្នកទទួល</string>
+    <string name="nickname">ឈ្មោះហៅ</string>
+    <string name="no_payees">មិនទាន់មានអ្នកទទួលដែលបានរក្សាទុក</string>
+    <string name="payee_unavailable">មិនអាចទទួលប្រាក់បានទេពេលនេះ</string>
+    <string name="remove">លុបចេញ</string>
+    <string name="save">រក្សាទុក</string>
+    <string name="cancel">បោះបង់</string>
+    <string name="set_amount">កំណត់ចំនួនទឹកប្រាក់</string>
+    <string name="any_amount">ចំនួនណាក៏បាន</string>
+    <string name="scan_failed">មិនអាចអានកូដនោះបានទេ</string>
+    <string name="change_password">ប្តូរពាក្យសម្ងាត់</string>
+    <string name="current_password">ពាក្យសម្ងាត់បច្ចុប្បន្ន</string>
+    <string name="password_changed">បានប្តូរពាក្យសម្ងាត់</string>
+    <string name="on">បើក</string>
+    <string name="off">បិទ</string>
+    <string name="two_step_step1">1. បញ្ចូលកូនសោនេះទៅក្នុងកម្មវិធីផ្ទៀងផ្ទាត់ (Google Authenticator…) ឬស្កេនកូដ។</string>
+    <string name="two_step_step2">2. បញ្ចូលលេខកូដ ៦ ខ្ទង់ដែលវាបង្ហាញ។</string>
+    <string name="turn_on">បើក</string>
+    <string name="turn_off">បិទ</string>
+    <string name="two_step_is_on">ការផ្ទៀងផ្ទាត់ពីរជំហានកំពុងបើក។ ការចូលត្រូវការពាក្យសម្ងាត់ និងលេខកូដពីកម្មវិធីរបស់អ្នក។</string>
+    <string name="two_step_disable_prompt">បញ្ចូលលេខកូដពីកម្មវិធីផ្ទៀងផ្ទាត់ ដើម្បីបិទ។</string>
+    <string name="limit_value">នៅសល់ %1$s ក្នុងចំណោម %2$s ថ្ងៃនេះ</string>
+    <string name="copy_key">ចម្លងកូនសោ</string>
+    <string name="key_copied">បានចម្លងកូនសោ</string>
+    <string name="pay_title">បង់ប្រាក់</string>
 </resources>
