@@ -2,10 +2,12 @@ package com.example.bank.controller;
 
 import com.example.bank.dto.AccountResponse;
 import com.example.bank.dto.PageResponse;
+import com.example.bank.security.AuthenticatedUser;
 import com.example.bank.service.AccountService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,17 +38,17 @@ public class AdminAccountController {
     }
 
     @PostMapping("/{id}/freeze")
-    public AccountResponse freeze(@PathVariable Long id) {
-        return accountService.freeze(id);
+    public AccountResponse freeze(@AuthenticationPrincipal AuthenticatedUser admin, @PathVariable Long id) {
+        return accountService.freeze(admin, id);
     }
 
     @PostMapping("/{id}/unfreeze")
-    public AccountResponse unfreeze(@PathVariable Long id) {
-        return accountService.unfreeze(id);
+    public AccountResponse unfreeze(@AuthenticationPrincipal AuthenticatedUser admin, @PathVariable Long id) {
+        return accountService.unfreeze(admin, id);
     }
 
     @PostMapping("/{id}/close")
-    public AccountResponse close(@PathVariable Long id) {
-        return accountService.close(id);
+    public AccountResponse close(@AuthenticationPrincipal AuthenticatedUser admin, @PathVariable Long id) {
+        return accountService.close(admin, id);
     }
 }

@@ -2,6 +2,7 @@ package com.example.bank.service;
 
 import com.example.bank.config.AccountProperties;
 import com.example.bank.domain.Account;
+import com.example.bank.domain.AuditAction;
 import com.example.bank.domain.User;
 import com.example.bank.dto.AccountResponse;
 import com.example.bank.dto.AccountTransactionResponse;
@@ -33,10 +34,12 @@ public class AccountService {
     private final UserRepository userRepository;
     private final AccountNumberGenerator accountNumberGenerator;
     private final AccountProperties accountProperties;
+    private final AuditService auditService;
 
     public AccountService(AccountRepository accountRepository, LedgerEntryRepository ledgerEntryRepository,
                           UserRepository userRepository, AccountNumberGenerator accountNumberGenerator,
-                          AccountProperties accountProperties) {
+                          AccountProperties accountProperties, AuditService auditService) {
+        this.auditService = auditService;
         this.accountRepository = accountRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.userRepository = userRepository;
@@ -55,6 +58,8 @@ public class AccountService {
         // getReferenceById returns a proxy without a SELECT; we only need the foreign key.
         User owner = userRepository.getReferenceById(caller.id());
         Account account = accountRepository.save(new Account(accountNumberGenerator.next(), owner, currency));
+        auditService.success(AuditAction.ACCOUNT_OPENED, caller.id(), "ACCOUNT", account.getId(),
+                "number=" + account.getAccountNumber() + " currency=" + currency);
         return AccountResponse.from(account, BigDecimal.ZERO);
     }
 
@@ -91,21 +96,23 @@ public class AccountService {
     // "mark closed", leaving money stuck in a closed account.
 
     @Transactional
-    public AccountResponse freeze(Long accountId) {
+    public AccountResponse freeze(AuthenticatedUser admin, Long accountId) {
         Account account = lock(accountId);
         account.freeze();
+        auditService.success(AuditAction.ACCOUNT_FROZEN, admin.id(), "ACCOUNT", accountId, null);
         return AccountResponse.from(account, ledgerEntryRepository.balanceOf(accountId));
     }
 
     @Transactional
-    public AccountResponse unfreeze(Long accountId) {
+    public AccountResponse unfreeze(AuthenticatedUser admin, Long accountId) {
         Account account = lock(accountId);
         account.unfreeze();
+        auditService.success(AuditAction.ACCOUNT_UNFROZEN, admin.id(), "ACCOUNT", accountId, null);
         return AccountResponse.from(account, ledgerEntryRepository.balanceOf(accountId));
     }
 
     @Transactional
-    public AccountResponse close(Long accountId) {
+    public AccountResponse close(AuthenticatedUser admin, Long accountId) {
         Account account = lock(accountId);
         BigDecimal balance = ledgerEntryRepository.balanceOf(accountId);
         if (balance.signum() != 0) {
@@ -114,6 +121,7 @@ public class AccountService {
                             + balance.stripTrailingZeros().toPlainString() + ")");
         }
         account.close();
+        auditService.success(AuditAction.ACCOUNT_CLOSED, admin.id(), "ACCOUNT", accountId, null);
         return AccountResponse.from(account, balance);
     }
 

@@ -1,5 +1,7 @@
 package com.example.bank.service;
 
+import com.example.bank.domain.AuditAction;
+import com.example.bank.domain.AuditOutcome;
 import com.example.bank.domain.Role;
 import com.example.bank.domain.User;
 import com.example.bank.dto.AuthResponse;
@@ -24,6 +26,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final AuditService auditService;
 
     /**
      * Hash of a throwaway password, checked when the email is unknown. Login then
@@ -33,10 +36,11 @@ public class AuthService {
     private final String dummyHash;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       TokenService tokenService) {
+                       TokenService tokenService, AuditService auditService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.auditService = auditService;
         this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -51,21 +55,36 @@ public class AuthService {
         User user = new User(request.fullName().trim(), email,
                 passwordEncoder.encode(request.password()), Role.CUSTOMER);
         try {
-            return UserResponse.from(userRepository.saveAndFlush(user));
+            user = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException e) {
             throw new EmailAlreadyUsedException(email);
         }
+        auditService.success(AuditAction.USER_REGISTERED, user.getId(), "USER", user.getId(), null);
+        return UserResponse.from(user);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Deliberately not @Transactional: the failure audit row must be committed even
+     * though the method then throws. Each repository/audit call runs in its own
+     * short transaction instead.
+     */
     public AuthResponse login(LoginRequest request) {
-        Optional<User> user = userRepository.findByEmail(normalizeEmail(request.email()));
+        String email = normalizeEmail(request.email());
+        Optional<User> user = userRepository.findByEmail(email);
         String hash = user.map(User::getPasswordHash).orElse(dummyHash);
         boolean passwordMatches = passwordEncoder.matches(request.password(), hash);
         if (user.isEmpty() || !passwordMatches) {
+            Long userId = user.map(User::getId).orElse(null);
+            auditService.record(AuditAction.LOGIN_FAILED, AuditOutcome.FAILURE, userId, "USER", userId,
+                    "email=" + email);
             throw new InvalidCredentialsException();
         }
-        TokenService.IssuedToken token = tokenService.issueAccessToken(user.get());
+        auditService.success(AuditAction.LOGIN_SUCCEEDED, user.get().getId(), "USER", user.get().getId(), null);
+        return issueTokens(user.get());
+    }
+
+    private AuthResponse issueTokens(User user) {
+        TokenService.IssuedToken token = tokenService.issueAccessToken(user);
         return AuthResponse.bearer(token.value(), token.expiresInSeconds());
     }
 

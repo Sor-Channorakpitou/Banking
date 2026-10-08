@@ -23,6 +23,7 @@ public enum ErrorCode {
     EMAIL_ALREADY_USED(HttpStatus.CONFLICT, "Email already registered"),
     ACCOUNT_STATE_CONFLICT(HttpStatus.CONFLICT, "Invalid account state"),
     CONCURRENT_MODIFICATION(HttpStatus.CONFLICT, "Concurrent modification"),
+    DATA_CONFLICT(HttpStatus.CONFLICT, "Data conflict"),
     IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "Idempotency key conflict"),
 
     // 422: the request is well-formed but breaks a business rule.

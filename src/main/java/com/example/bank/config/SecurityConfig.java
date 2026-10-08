@@ -1,6 +1,8 @@
 package com.example.bank.config;
 
 import com.example.bank.security.JwtAuthenticationConverter;
+import com.example.bank.security.ProblemDetailsAccessDeniedHandler;
+import com.example.bank.security.ProblemDetailsAuthenticationEntryPoint;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -38,19 +40,29 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     SecurityFilterChain apiSecurity(HttpSecurity http,
-                                    JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+                                    JwtAuthenticationConverter jwtAuthenticationConverter,
+                                    ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint,
+                                    ProblemDetailsAccessDeniedHandler accessDeniedHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
+                        // API docs (Swagger UI and the OpenAPI JSON it reads)
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Spring forwards errors to /error; let that through so clients see the real status.
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Default deny: anything not listed above needs a valid token.
                         .anyRequest().authenticated())
+                // JSON error bodies for 401/403, in the same format as every other error.
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .oauth2ResourceServer(oauth -> oauth
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
         return http.build();
     }

@@ -39,6 +39,8 @@ class AccountServiceTest {
     private UserRepository userRepository;
     @Mock
     private AccountNumberGenerator accountNumberGenerator;
+    @Mock
+    private AuditService auditService;
 
     private AccountService service;
 
@@ -50,7 +52,7 @@ class AccountServiceTest {
     @BeforeEach
     void setUp() {
         service = new AccountService(accountRepository, ledgerEntryRepository, userRepository,
-                accountNumberGenerator, new AccountProperties(Set.of("USD", "KHR")));
+                accountNumberGenerator, new AccountProperties(Set.of("USD", "KHR")), auditService);
     }
 
     @Test
@@ -77,7 +79,7 @@ class AccountServiceTest {
         when(accountRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(account));
         when(ledgerEntryRepository.balanceOf(10L)).thenReturn(new BigDecimal("5.0000"));
 
-        assertThatThrownBy(() -> service.close(10L))
+        assertThatThrownBy(() -> service.close(adminCaller, 10L))
                 .isInstanceOf(BankException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCOUNT_STATE_CONFLICT);
         assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
@@ -89,7 +91,7 @@ class AccountServiceTest {
         when(accountRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(account));
         when(ledgerEntryRepository.balanceOf(10L)).thenReturn(BigDecimal.ZERO);
 
-        assertThat(service.close(10L).status()).isEqualTo(AccountStatus.CLOSED);
+        assertThat(service.close(adminCaller, 10L).status()).isEqualTo(AccountStatus.CLOSED);
     }
 
     @Test

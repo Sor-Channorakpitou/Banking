@@ -2,6 +2,7 @@ package com.example.bank.service;
 
 import com.example.bank.domain.Account;
 import com.example.bank.domain.AccountType;
+import com.example.bank.domain.AuditAction;
 import com.example.bank.domain.EntryDirection;
 import com.example.bank.domain.LedgerEntry;
 import com.example.bank.domain.Money;
@@ -59,9 +60,12 @@ public class MoneyMovementService {
     private final LedgerEntryRepository ledgerEntryRepository;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public MoneyMovementService(AccountRepository accountRepository, LedgerEntryRepository ledgerEntryRepository,
-                                TransactionRepository transactionRepository, UserRepository userRepository) {
+                                TransactionRepository transactionRepository, UserRepository userRepository,
+                                AuditService auditService) {
+        this.auditService = auditService;
         this.accountRepository = accountRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.transactionRepository = transactionRepository;
@@ -185,7 +189,12 @@ public class MoneyMovementService {
         List<LedgerEntry> entries = ledgerEntryRepository.saveAll(List.of(
                 new LedgerEntry(tx, debitAccount, EntryDirection.DEBIT, amount),
                 new LedgerEntry(tx, creditAccount, EntryDirection.CREDIT, amount)));
-        return new MoneyMovementResult(TransactionResponse.from(tx, entries), false);
+        TransactionResponse response = TransactionResponse.from(tx, entries);
+        // Same DB transaction as the posting: the audit row exists if and only if the money moved.
+        auditService.success(AuditAction.valueOf(type.name()), caller.id(), "TRANSACTION", tx.getId(),
+                "amount=" + amount.toPlainString() + " " + currency
+                        + " from=" + response.fromAccountNumber() + " to=" + response.toAccountNumber());
+        return new MoneyMovementResult(response, false);
     }
 
     // ---------------------------------------------------------------- idempotency

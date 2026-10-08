@@ -97,7 +97,8 @@ class AuthFlowIntegrationTest {
     @Test
     void protectedEndpointsRequireValidToken() throws Exception {
         mockMvc.perform(get("/api/users/me"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
 
         mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer not-a-real-token"))
                 .andExpect(status().isUnauthorized());
@@ -113,7 +114,8 @@ class AuthFlowIntegrationTest {
         String customerToken = login(email, "password123");
 
         mockMvc.perform(get("/api/admin/users").header("Authorization", "Bearer " + customerToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     }
 
     @Test

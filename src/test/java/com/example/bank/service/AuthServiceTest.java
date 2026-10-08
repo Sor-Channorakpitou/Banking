@@ -43,13 +43,16 @@ class AuthServiceTest {
     @Mock
     private TokenService tokenService;
 
+    @Mock
+    private AuditService auditService;
+
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
 
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder, tokenService);
+        authService = new AuthService(userRepository, passwordEncoder, tokenService, auditService);
     }
 
     @Test
