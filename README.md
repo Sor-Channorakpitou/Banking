@@ -1,5 +1,7 @@
 # Core Banking Backend
 
+[![CI](https://github.com/Sor-Channorakpitou/Banking/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/Sor-Channorakpitou/Banking/actions/workflows/ci.yml)
+
 A learning project: an enterprise-style core banking API with Java 21 and Spring Boot 3.
 
 - Double-entry ledger: balances are always derived from ledger entries, never stored or edited
@@ -31,7 +33,7 @@ docker compose up --build
 ./mvnw verify
 ```
 
-The PostgreSQL tests (migrations and the concurrency test) use Testcontainers and are skipped when Docker isn't running.
+The PostgreSQL tests (migrations and the concurrency test) use Testcontainers and are skipped when Docker isn't running. CI (GitHub Actions) runs everything, including those tests and the Docker image build, on every push.
 
 ## API overview
 
