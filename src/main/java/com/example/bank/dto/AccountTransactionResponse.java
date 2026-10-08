@@ -22,10 +22,11 @@ public record AccountTransactionResponse(
         String description,
         Instant createdAt) {
 
-    public static AccountTransactionResponse from(LedgerEntry entry) {
+    /** {@code currency}: the account's currency, which for an exchange differs from the transaction's. */
+    public static AccountTransactionResponse from(LedgerEntry entry, String currency) {
         Transaction tx = entry.getTransaction();
         return new AccountTransactionResponse(tx.getId(), tx.getType(), entry.getDirection(),
-                Money.forDisplay(entry.getAmount(), tx.getCurrency()), tx.getCurrency(),
+                Money.forDisplay(entry.getAmount(), currency), currency,
                 tx.getDescription(), entry.getCreatedAt());
     }
 }

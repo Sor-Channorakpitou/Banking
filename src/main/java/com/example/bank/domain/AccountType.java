@@ -8,5 +8,10 @@ public enum AccountType {
      * withdrawal. Its balance is the negative of all cash customers have paid
      * in, so the sum over every account in a currency is always zero.
      */
-    CASH
+    CASH,
+    /**
+     * The bank's foreign-exchange position in one currency: the other side of each
+     * leg of a currency exchange.
+     */
+    FX
 }

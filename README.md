@@ -9,6 +9,7 @@ A learning project: an enterprise-style core banking API with Java 21 and Spring
 - Deposits, withdrawals and transfers with pessimistic locking (ascending ID order) and idempotency keys
 - Consistent JSON errors (RFC 9457 problem details with a stable `code`)
 - Audit log, Prometheus metrics, structured logging with request IDs, login rate limiting
+- KHR/USD currency exchange with published buy/sell rates (four-entry, per-currency balanced postings)
 - Monthly statements
 - Flyway migrations, H2 for local dev, PostgreSQL in Docker
 
@@ -45,6 +46,9 @@ The PostgreSQL tests (migrations and the concurrency test) use Testcontainers an
 | GET | `/api/accounts/{id}`, `/{id}/transactions`, `/{id}/statements/{yyyy-MM}` | owner or admin |
 | POST | `/api/accounts/{id}/deposit`, `/{id}/withdraw` (Idempotency-Key header) | owner (deposit: also admin) |
 | POST | `/api/transfers` (Idempotency-Key header) | owner of source account |
+| GET | `/api/exchange-rates`, `/api/exchange-rates/quote?from=USD&to=KHR&amount=10` | authenticated |
+| POST | `/api/exchanges` (Idempotency-Key header) | owner of both accounts |
+| POST | `/api/admin/exchange-rates` | admin |
 | GET | `/api/admin/users`, `/api/admin/accounts`, `/api/admin/audit-logs` | admin |
 | POST | `/api/admin/accounts/{id}/freeze`, `/unfreeze`, `/close` | admin |
 | GET | `/actuator/metrics`, `/actuator/prometheus` | admin |

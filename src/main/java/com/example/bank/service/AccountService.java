@@ -80,7 +80,7 @@ public class AccountService {
                                                             int page, int size) {
         Account account = findAccessible(caller, accountId);
         return PageResponse.from(ledgerEntryRepository.findHistory(account.getId(), PageRequest.of(page, size))
-                .map(AccountTransactionResponse::from));
+                .map(entry -> AccountTransactionResponse.from(entry, account.getCurrency())));
     }
 
     @Transactional(readOnly = true)

@@ -14,5 +14,7 @@ public enum AuditAction {
     ACCOUNT_CLOSED,
     DEPOSIT,
     WITHDRAWAL,
-    TRANSFER
+    TRANSFER,
+    EXCHANGE,
+    EXCHANGE_RATE_SET
 }

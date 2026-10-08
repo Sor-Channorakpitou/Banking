@@ -79,7 +79,15 @@ public class Account {
 
     /** The bank's cash account for one currency, e.g. "CASH-USD". */
     public static Account cash(String currency) {
-        return new Account(AccountType.CASH, "CASH-" + currency, null, currency);
+        return internal(AccountType.CASH, currency);
+    }
+
+    /** An internal bank account, numbered by type and currency: "CASH-USD", "FX-KHR". */
+    public static Account internal(AccountType type, String currency) {
+        if (type == AccountType.CUSTOMER) {
+            throw new IllegalArgumentException("Customer accounts need an owner");
+        }
+        return new Account(type, type.name() + "-" + currency, null, currency);
     }
 
     @PrePersist

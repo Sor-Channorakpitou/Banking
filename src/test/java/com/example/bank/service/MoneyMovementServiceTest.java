@@ -81,7 +81,8 @@ class MoneyMovementServiceTest {
     @BeforeEach
     void setUp() {
         service = new MoneyMovementService(accountRepository, ledgerEntryRepository, transactionRepository,
-                userRepository, auditService, metrics);
+                userRepository, auditService, metrics,
+                new MoneyRules(accountRepository, ledgerEntryRepository));
         aliceUsd = account(10L, alice, "USD");
         bobUsd = account(20L, bob, "USD");
         bobKhr = account(30L, bob, "KHR");
@@ -231,7 +232,7 @@ class MoneyMovementServiceTest {
 
     @Test
     void repeatedKeyReturnsOriginalResultWithoutPostingAgain() {
-        String fingerprint = MoneyMovementService.fingerprint(TransactionType.DEPOSIT, 10L,
+        String fingerprint = MoneyRules.fingerprint(TransactionType.DEPOSIT, 10L,
                 new BigDecimal("100.5"), null);
         Transaction original = new Transaction(TransactionType.DEPOSIT, new BigDecimal("100.5000"), "USD",
                 "key-1", null, alice, fingerprint);
@@ -250,7 +251,7 @@ class MoneyMovementServiceTest {
     @Test
     void sameKeyWithDifferentRequestIsRejected() {
         Transaction original = new Transaction(TransactionType.DEPOSIT, new BigDecimal("100"), "USD",
-                "key-1", null, alice, MoneyMovementService.fingerprint(TransactionType.DEPOSIT, 10L,
+                "key-1", null, alice, MoneyRules.fingerprint(TransactionType.DEPOSIT, 10L,
                 new BigDecimal("100"), null));
         when(transactionRepository.findByIdempotencyKey("key-1")).thenReturn(Optional.of(original));
 

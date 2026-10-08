@@ -57,10 +57,37 @@ public class Transaction {
     @Column(name = "request_fingerprint", nullable = false, length = 64, updatable = false)
     private String requestFingerprint;
 
+    // Second leg of an EXCHANGE (null for other types): what was credited, and the
+    // published rate used, in quote units per 1 base unit (e.g. 4,090 KHR per USD).
+    @Column(name = "counter_amount", precision = 19, scale = 4, updatable = false)
+    private BigDecimal counterAmount;
+
+    @Column(name = "counter_currency", length = 3, updatable = false)
+    private String counterCurrency;
+
+    @Column(name = "exchange_rate", precision = 19, scale = 6, updatable = false)
+    private BigDecimal exchangeRate;
+
+    @Column(name = "exchange_rate_base", length = 3, updatable = false)
+    private String exchangeRateBase;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     protected Transaction() {
+    }
+
+    /** An EXCHANGE: {@code amount}/{@code currency} is what was sold, the counter leg what was bought. */
+    public static Transaction exchange(BigDecimal soldAmount, String soldCurrency, BigDecimal boughtAmount,
+                                       String boughtCurrency, BigDecimal rate, String rateBase,
+                                       String idempotencyKey, User initiatedBy, String requestFingerprint) {
+        Transaction tx = new Transaction(TransactionType.EXCHANGE, soldAmount, soldCurrency, idempotencyKey,
+                soldCurrency + " to " + boughtCurrency, initiatedBy, requestFingerprint);
+        tx.counterAmount = boughtAmount;
+        tx.counterCurrency = boughtCurrency;
+        tx.exchangeRate = rate;
+        tx.exchangeRateBase = rateBase;
+        return tx;
     }
 
     /**
@@ -119,6 +146,22 @@ public class Transaction {
 
     public String getRequestFingerprint() {
         return requestFingerprint;
+    }
+
+    public BigDecimal getCounterAmount() {
+        return counterAmount;
+    }
+
+    public String getCounterCurrency() {
+        return counterCurrency;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public String getExchangeRateBase() {
+        return exchangeRateBase;
     }
 
     public Instant getCreatedAt() {
