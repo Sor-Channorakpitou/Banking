@@ -17,6 +17,7 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // The emulator reaches the PC's localhost at 10.0.2.2. On a real phone, change the
         // server address on the login screen to your PC's Wi-Fi IP (e.g. http://192.168.1.20:8080).
@@ -70,4 +71,10 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.play.services.code.scanner)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Instrumented UI tests (run on an emulator by .github/workflows/android-screenshots.yml)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }
