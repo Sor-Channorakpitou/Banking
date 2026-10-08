@@ -9,6 +9,9 @@ A learning project: an enterprise-style core banking API with Java 21 and Spring
 - Deposits, withdrawals and transfers with pessimistic locking (ascending ID order) and idempotency keys
 - Consistent JSON errors (RFC 9457 problem details with a stable `code`)
 - Audit log, Prometheus metrics, structured logging with request IDs, login rate limiting
+- Email verification, password reset, two-step login (TOTP), daily outgoing limits
+- Saved payees, recipient name check, EMV/KHQR-style payment QR codes
+- Android app "Lime" (Kotlin, Jetpack Compose) in `android/`, APK built by GitHub Actions
 - KHR/USD currency exchange with published buy/sell rates (four-entry, per-currency balanced postings)
 - Monthly statements
 - Flyway migrations, H2 for local dev, PostgreSQL in Docker
@@ -20,7 +23,7 @@ A learning project: an enterprise-style core banking API with Java 21 and Spring
 ./mvnw spring-boot:run
 
 # Full stack in Docker (PostgreSQL + app)
-cp .env.example .env        # set JWT_SECRET: openssl rand -base64 32
+cp .env.example .env        # set JWT_SECRET and DATA_ENCRYPTION_KEY: openssl rand -base64 32
 docker compose up --build
 ```
 
@@ -41,7 +44,12 @@ The PostgreSQL tests (migrations and the concurrency test) use Testcontainers an
 | Method | Path | Who |
 |---|---|---|
 | POST | `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout` | public |
+| POST | `/api/auth/verify-email`, `/api/auth/forgot-password`, `/api/auth/reset-password` | public |
 | GET | `/api/users/me` | authenticated |
+| POST | `/api/users/me/password`, `/api/users/me/verify-email/resend`, `/api/users/me/two-step/{setup,enable,disable}` | authenticated |
+| GET | `/api/accounts/lookup?number=`, `/api/accounts/{id}/payment-qr`, `/api/accounts/{id}/limits` | authenticated / owner |
+| GET, POST, DELETE | `/api/payees`, `/api/payees/{id}` | authenticated (own payees) |
+| POST | `/api/payment-qr/decode` | authenticated |
 | POST, GET | `/api/accounts` | customer (own accounts) |
 | GET | `/api/accounts/{id}`, `/{id}/transactions`, `/{id}/statements/{yyyy-MM}` | owner or admin |
 | POST | `/api/accounts/{id}/deposit`, `/{id}/withdraw` (Idempotency-Key header) | owner (deposit: also admin) |
@@ -79,6 +87,15 @@ com.example.bank
 ├── security     JWT, refresh tokens, rate limiting, security error responses
 └── exception    error codes and the global exception handler
 ```
+
+## Android app
+
+`android/` holds the customer app (Kotlin + Jetpack Compose, English and Khmer). Every push that changes it
+builds a debug APK: open the repository's **Actions** tab, the latest **Android** run, and download
+`lime-debug-apk`. To build locally, open `android/` in Android Studio.
+
+The emulator reaches your PC's API at `http://10.0.2.2:8080`. On a real phone, tap **Change server** on the
+sign-in screen and enter your PC's Wi-Fi address, e.g. `http://192.168.1.20:8080`.
 
 ## Branches
 

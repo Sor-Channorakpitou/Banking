@@ -6,6 +6,7 @@ import com.example.bank.domain.AuditAction;
 import com.example.bank.domain.User;
 import com.example.bank.dto.AccountResponse;
 import com.example.bank.dto.AccountTransactionResponse;
+import com.example.bank.dto.DailyLimitResponse;
 import com.example.bank.dto.OpenAccountRequest;
 import com.example.bank.dto.PageResponse;
 import com.example.bank.exception.BusinessRuleException;
@@ -35,10 +36,12 @@ public class AccountService {
     private final AccountNumberGenerator accountNumberGenerator;
     private final AccountProperties accountProperties;
     private final AuditService auditService;
+    private final MoneyRules moneyRules;
 
     public AccountService(AccountRepository accountRepository, LedgerEntryRepository ledgerEntryRepository,
                           UserRepository userRepository, AccountNumberGenerator accountNumberGenerator,
-                          AccountProperties accountProperties, AuditService auditService) {
+                          AccountProperties accountProperties, AuditService auditService, MoneyRules moneyRules) {
+        this.moneyRules = moneyRules;
         this.auditService = auditService;
         this.accountRepository = accountRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
@@ -72,6 +75,14 @@ public class AccountService {
     public AccountResponse get(AuthenticatedUser caller, Long accountId) {
         Account account = findAccessible(caller, accountId);
         return AccountResponse.from(account, ledgerEntryRepository.balanceOf(account.getId()));
+    }
+
+    /** How much more can leave this account today. */
+    @Transactional(readOnly = true)
+    public DailyLimitResponse dailyLimit(AuthenticatedUser caller, Long accountId) {
+        Account account = findAccessible(caller, accountId);
+        MoneyRules.DailyLimit limit = moneyRules.dailyLimit(account);
+        return new DailyLimitResponse(account.getCurrency(), limit.limit(), limit.usedToday(), limit.remaining());
     }
 
     /** Owner or admin; newest first. */

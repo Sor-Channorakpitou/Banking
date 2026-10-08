@@ -53,6 +53,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Email (verification and password-reset codes) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Metrics in Prometheus format at /actuator/prometheus -->
         <dependency>
             <groupId>io.micrometer</groupId>

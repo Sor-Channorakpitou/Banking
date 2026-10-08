@@ -67,6 +67,15 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
             """)
     List<LedgerEntry> findForPeriod(Long accountId, Instant from, Instant to);
 
+    /** Money that left an account since a moment (every DEBIT on a customer account is outgoing). */
+    @Query("""
+            select coalesce(sum(e.amount), 0) from LedgerEntry e
+            where e.account.id = :accountId
+              and e.direction = com.example.bank.domain.EntryDirection.DEBIT
+              and e.createdAt >= :since
+            """)
+    BigDecimal debitsSince(Long accountId, Instant since);
+
     /** Spring Data projection: one row of {@link #balancesOf}. */
     interface AccountBalance {
         Long getAccountId();

@@ -16,7 +16,10 @@ public enum ErrorCode {
     UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "Authentication required"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid credentials"),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid refresh token"),
+    TOTP_REQUIRED(HttpStatus.UNAUTHORIZED, "Two-step code required"),
+    INVALID_TOTP(HttpStatus.UNAUTHORIZED, "Invalid two-step code"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "Access denied"),
+    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "Email not verified"),
 
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not found"),
 
@@ -34,6 +37,8 @@ public enum ErrorCode {
     SAME_ACCOUNT_TRANSFER(HttpStatus.UNPROCESSABLE_ENTITY, "Same account transfer"),
     IDEMPOTENCY_KEY_REUSED(HttpStatus.UNPROCESSABLE_ENTITY, "Idempotency key reused"),
     EXCHANGE_RATE_UNAVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Exchange rate unavailable"),
+    DAILY_LIMIT_EXCEEDED(HttpStatus.UNPROCESSABLE_ENTITY, "Daily limit exceeded"),
+    INVALID_CODE(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid or expired code"),
 
     TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error");

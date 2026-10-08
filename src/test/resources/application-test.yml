@@ -8,6 +8,15 @@ spring:
 app:
   jwt:
     secret: dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=
+  security:
+    data-key: 3q2+7wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhs=
+    # Most tests aren't about verification; AccountSecurityIntegrationTest turns it on.
+    require-verified-email: false
+  limits:
+    daily-outgoing:
+      USD: 100000000
+      EUR: 100000000
+      KHR: 100000000000
   admin:
     email: admin@test.local
     password: Admin123!

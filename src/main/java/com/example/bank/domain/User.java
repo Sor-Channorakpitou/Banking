@@ -36,8 +36,69 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
+
+    /** Encrypted with DataCipher; null until two-step login is set up. */
+    @Column(name = "totp_secret", length = 255)
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private boolean totpEnabled;
+
+    @Column(name = "totp_last_step")
+    private Long totpLastStep;
+
     /** Required by JPA; not for application code. */
     protected User() {
+    }
+
+    public void markEmailVerified(Instant at) {
+        if (emailVerifiedAt == null) {
+            emailVerifiedAt = at;
+        }
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerifiedAt != null;
+    }
+
+    public void changePasswordHash(String newHash) {
+        this.passwordHash = newHash;
+    }
+
+    /** Stores a new (encrypted) secret; it only takes effect after {@link #enableTotp()}. */
+    public void startTotpSetup(String encryptedSecret) {
+        this.totpSecret = encryptedSecret;
+        this.totpEnabled = false;
+        this.totpLastStep = null;
+    }
+
+    public void enableTotp() {
+        this.totpEnabled = true;
+    }
+
+    public void disableTotp() {
+        this.totpEnabled = false;
+        this.totpSecret = null;
+        this.totpLastStep = null;
+    }
+
+    /** Records the 30-second window of the last accepted code; returns false if it was already used. */
+    public boolean acceptTotpStep(long step) {
+        if (totpLastStep != null && step <= totpLastStep) {
+            return false;
+        }
+        totpLastStep = step;
+        return true;
+    }
+
+    public String getTotpSecret() {
+        return totpSecret;
+    }
+
+    public boolean isTotpEnabled() {
+        return totpEnabled;
     }
 
     public User(String fullName, String email, String passwordHash, Role role) {

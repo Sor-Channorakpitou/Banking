@@ -44,8 +44,9 @@ public class AdminBootstrap implements ApplicationRunner {
         if (userRepository.existsByEmail(email)) {
             return;
         }
-        userRepository.save(new User(properties.fullName(), email,
-                passwordEncoder.encode(properties.password()), Role.ADMIN));
+        User admin = new User(properties.fullName(), email, passwordEncoder.encode(properties.password()), Role.ADMIN);
+        admin.markEmailVerified(java.time.Instant.now()); // configured by the operator, nothing to prove
+        userRepository.save(admin);
         log.info("Created initial admin user {}", email);
     }
 }

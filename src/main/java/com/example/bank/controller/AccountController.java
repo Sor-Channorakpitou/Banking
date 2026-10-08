@@ -2,6 +2,7 @@ package com.example.bank.controller;
 
 import com.example.bank.dto.AccountResponse;
 import com.example.bank.dto.AccountTransactionResponse;
+import com.example.bank.dto.DailyLimitResponse;
 import com.example.bank.dto.OpenAccountRequest;
 import com.example.bank.dto.PageResponse;
 import com.example.bank.security.AuthenticatedUser;
@@ -62,6 +63,12 @@ public class AccountController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return accountService.history(caller, id, page, size);
+    }
+
+    /** Daily outgoing limit: how much is left today. */
+    @GetMapping("/{id}/limits")
+    public DailyLimitResponse limits(@AuthenticationPrincipal AuthenticatedUser caller, @PathVariable Long id) {
+        return accountService.dailyLimit(caller, id);
     }
 
     /** Monthly statement, e.g. GET /api/accounts/4/statements/2026-10 */

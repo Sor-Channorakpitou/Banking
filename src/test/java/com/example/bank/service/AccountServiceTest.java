@@ -41,6 +41,8 @@ class AccountServiceTest {
     private AccountNumberGenerator accountNumberGenerator;
     @Mock
     private AuditService auditService;
+    @Mock
+    private MoneyRules moneyRules;
 
     private AccountService service;
 
@@ -52,7 +54,7 @@ class AccountServiceTest {
     @BeforeEach
     void setUp() {
         service = new AccountService(accountRepository, ledgerEntryRepository, userRepository,
-                accountNumberGenerator, new AccountProperties(Set.of("USD", "KHR")), auditService);
+                accountNumberGenerator, new AccountProperties(Set.of("USD", "KHR")), auditService, moneyRules);
     }
 
     @Test

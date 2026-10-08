@@ -1,13 +1,17 @@
 package com.example.bank.service;
 
+import com.example.bank.config.LimitsProperties;
+import com.example.bank.config.SecurityProperties;
 import com.example.bank.domain.Account;
 import com.example.bank.domain.Money;
+import com.example.bank.domain.User;
 import com.example.bank.exception.BankException;
 import com.example.bank.exception.BusinessRuleException;
 import com.example.bank.exception.ErrorCode;
 import com.example.bank.exception.ResourceNotFoundException;
 import com.example.bank.repository.AccountRepository;
 import com.example.bank.repository.LedgerEntryRepository;
+import com.example.bank.repository.UserRepository;
 import com.example.bank.security.AuthenticatedUser;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -16,6 +20,9 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.stream.Collectors;
@@ -33,10 +40,56 @@ public class MoneyRules {
 
     private final AccountRepository accountRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
+    private final UserRepository userRepository;
+    private final SecurityProperties securityProperties;
+    private final LimitsProperties limitsProperties;
 
-    public MoneyRules(AccountRepository accountRepository, LedgerEntryRepository ledgerEntryRepository) {
+    public MoneyRules(AccountRepository accountRepository, LedgerEntryRepository ledgerEntryRepository,
+                      UserRepository userRepository, SecurityProperties securityProperties,
+                      LimitsProperties limitsProperties) {
         this.accountRepository = accountRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
+        this.userRepository = userRepository;
+        this.securityProperties = securityProperties;
+        this.limitsProperties = limitsProperties;
+    }
+
+    /** Money can only leave an account once its owner has proven their email address. */
+    public void requireVerifiedEmail(AuthenticatedUser caller) {
+        if (!securityProperties.requireVerifiedEmail()) {
+            return;
+        }
+        boolean verified = userRepository.findById(caller.id()).map(User::isEmailVerified).orElse(false);
+        if (!verified) {
+            throw new BankException(ErrorCode.EMAIL_NOT_VERIFIED,
+                    "Verify your email address before sending money. We sent you a 6-digit code.");
+        }
+    }
+
+    public record DailyLimit(BigDecimal limit, BigDecimal usedToday, BigDecimal remaining) {
+    }
+
+    /** Today's limit for this account (UTC day); {@code limit} is null when the currency has none. */
+    public DailyLimit dailyLimit(Account account) {
+        BigDecimal limit = limitsProperties.dailyOutgoing().get(account.getCurrency());
+        Instant startOfDay = LocalDate.now(ZoneOffset.UTC).atStartOfDay(ZoneOffset.UTC).toInstant();
+        BigDecimal used = ledgerEntryRepository.debitsSince(account.getId(), startOfDay);
+        BigDecimal remaining = limit == null ? null : limit.subtract(used).max(BigDecimal.ZERO);
+        return new DailyLimit(limit, used, remaining);
+    }
+
+    /** Call while the account is locked, so parallel payments cannot slip past the limit together. */
+    public void requireWithinDailyLimit(Account account, BigDecimal amount) {
+        if (limitsProperties.dailyOutgoing().get(account.getCurrency()) == null) {
+            return;
+        }
+        DailyLimit status = dailyLimit(account);
+        if (amount.compareTo(status.remaining()) > 0) {
+            throw new BusinessRuleException(ErrorCode.DAILY_LIMIT_EXCEEDED, "Daily limit for "
+                    + account.getAccountNumber() + " is " + status.limit().stripTrailingZeros().toPlainString() + " "
+                    + account.getCurrency() + "; you can still send "
+                    + Money.forDisplay(status.remaining(), account.getCurrency()) + " today");
+        }
     }
 
     public void validateKey(String key) {

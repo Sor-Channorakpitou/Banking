@@ -97,6 +97,7 @@ public class MoneyMovementService {
                                         String idempotencyKey) {
         rules.validateKey(idempotencyKey);
         rules.requirePositive(request.amount());
+        rules.requireVerifiedEmail(caller);
         String fingerprint = MoneyRules.fingerprint(TransactionType.WITHDRAWAL, accountId, request.amount(),
                 request.description());
 
@@ -109,6 +110,7 @@ public class MoneyMovementService {
         rules.validateAmount(request.amount(), account.getCurrency());
         rules.requireActive(account);
         rules.requireFunds(account, request.amount());
+        rules.requireWithinDailyLimit(account, request.amount());
 
         Account cash = cashAccount(account.getCurrency());
         return post(TransactionType.WITHDRAWAL, request.amount(), account.getCurrency(), idempotencyKey,
@@ -119,6 +121,7 @@ public class MoneyMovementService {
     public MoneyMovementResult transfer(AuthenticatedUser caller, TransferRequest request, String idempotencyKey) {
         rules.validateKey(idempotencyKey);
         rules.requirePositive(request.amount());
+        rules.requireVerifiedEmail(caller);
         if (!AccountNumberGenerator.isValid(request.toAccountNumber())) {
             throw new BusinessRuleException(ErrorCode.VALIDATION_FAILED,
                     "toAccountNumber is not a valid account number (check digit mismatch)");
@@ -153,6 +156,7 @@ public class MoneyMovementService {
         rules.requireActive(from);
         rules.requireActive(to);
         rules.requireFunds(from, request.amount());
+        rules.requireWithinDailyLimit(from, request.amount());
 
         return post(TransactionType.TRANSFER, request.amount(), from.getCurrency(), idempotencyKey,
                 request.description(), caller, fingerprint, from, to);

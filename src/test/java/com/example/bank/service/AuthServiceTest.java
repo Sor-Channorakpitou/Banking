@@ -54,6 +54,12 @@ class AuthServiceTest {
     @Mock
     private LoginRateLimiter loginRateLimiter;
 
+    @Mock
+    private AccountSecurityService accountSecurityService;
+
+    @Mock
+    private EmailCodeService emailCodeService;
+
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
 
     private AuthService authService;
@@ -61,7 +67,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         authService = new AuthService(userRepository, passwordEncoder, tokenService, refreshTokenService,
-                loginRateLimiter, auditService);
+                loginRateLimiter, auditService, accountSecurityService, emailCodeService);
     }
 
     @Test

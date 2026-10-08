@@ -4,6 +4,7 @@ import com.example.bank.domain.AuditAction;
 import com.example.bank.domain.AuditOutcome;
 import com.example.bank.domain.Role;
 import com.example.bank.domain.User;
+import com.example.bank.domain.UserCode;
 import com.example.bank.dto.AuthResponse;
 import com.example.bank.dto.LoginRequest;
 import com.example.bank.dto.RefreshRequest;
@@ -11,6 +12,7 @@ import com.example.bank.dto.RegisterRequest;
 import com.example.bank.dto.UserResponse;
 import com.example.bank.exception.BankException;
 import com.example.bank.exception.EmailAlreadyUsedException;
+import com.example.bank.exception.ErrorCode;
 import com.example.bank.exception.InvalidCredentialsException;
 import com.example.bank.exception.RateLimitExceededException;
 import com.example.bank.repository.UserRepository;
@@ -34,6 +36,8 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final LoginRateLimiter loginRateLimiter;
     private final AuditService auditService;
+    private final AccountSecurityService accountSecurityService;
+    private final EmailCodeService emailCodeService;
 
     /**
      * Hash of a throwaway password, checked when the email is unknown. Login then
@@ -44,7 +48,10 @@ public class AuthService {
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenService tokenService,
                        RefreshTokenService refreshTokenService, LoginRateLimiter loginRateLimiter,
-                       AuditService auditService) {
+                       AuditService auditService, AccountSecurityService accountSecurityService,
+                       EmailCodeService emailCodeService) {
+        this.accountSecurityService = accountSecurityService;
+        this.emailCodeService = emailCodeService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -70,6 +77,7 @@ public class AuthService {
             throw new EmailAlreadyUsedException(email);
         }
         auditService.success(AuditAction.USER_REGISTERED, user.getId(), "USER", user.getId(), null);
+        emailCodeService.send(user, UserCode.Purpose.VERIFY_EMAIL);
         return UserResponse.from(user);
     }
 
@@ -98,6 +106,9 @@ public class AuthService {
                     "email=" + email);
             throw new InvalidCredentialsException();
         }
+        if (user.get().isTotpEnabled()) {
+            requireTwoStepCode(user.get(), request.totpCode(), email, clientIp);
+        }
         loginRateLimiter.recordSuccess(email, clientIp);
         auditService.success(AuditAction.LOGIN_SUCCEEDED, user.get().getId(), "USER", user.get().getId(), null);
         return issueTokens(user.get(), refreshTokenService.issue(user.get()));
@@ -117,6 +128,24 @@ public class AuthService {
 
     public void logout(RefreshRequest request) {
         refreshTokenService.revokeSession(request.refreshToken());
+    }
+
+    /**
+     * Second step of login when two-step is on. A missing code is not a failure (the app
+     * simply asks for it next); a wrong code counts like a wrong password.
+     */
+    private void requireTwoStepCode(User user, String code, String email, String clientIp) {
+        if (code == null) {
+            throw new BankException(ErrorCode.TOTP_REQUIRED, "Enter the 6-digit code from your authenticator app");
+        }
+        try {
+            accountSecurityService.requireValidTotp(user, code);
+        } catch (BankException e) {
+            loginRateLimiter.recordFailure(email, clientIp);
+            auditService.record(AuditAction.LOGIN_FAILED, AuditOutcome.FAILURE, user.getId(), "USER", user.getId(),
+                    "email=" + email + " reason=two-step code");
+            throw e;
+        }
     }
 
     private AuthResponse issueTokens(User user, RefreshTokenService.IssuedRefreshToken refreshToken) {

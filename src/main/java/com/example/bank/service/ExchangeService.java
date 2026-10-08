@@ -67,6 +67,7 @@ public class ExchangeService {
     public Result exchange(AuthenticatedUser caller, ExchangeRequest request, String idempotencyKey) {
         rules.validateKey(idempotencyKey);
         rules.requirePositive(request.amount());
+        rules.requireVerifiedEmail(caller);
         Long fromId = request.fromAccountId();
         Long toId = request.toAccountId();
         if (fromId.equals(toId)) {
@@ -96,6 +97,7 @@ public class ExchangeService {
         }
         rules.validateAmount(quote.convertedAmount(), to.getCurrency());
         rules.requireFunds(from, request.amount());
+        rules.requireWithinDailyLimit(from, request.amount());
 
         Transaction tx;
         try {

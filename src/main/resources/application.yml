@@ -72,6 +72,22 @@ app:
         quote: USD
         buy-rate: 1.07
         sell-rate: 1.11
+  security:
+    # Money can only leave an account after the owner verified their email.
+    require-verified-email: true
+    code-ttl: 15m
+    code-max-attempts: 5
+    # Browser origins allowed to call the API, e.g. [https://bank.example.com]. Empty = none.
+    cors-allowed-origins: []
+    # data-key: set per profile (Base64, 32 bytes). Encrypts secrets stored in the database.
+  limits:
+    # Most money that can leave one account per day (UTC), per currency.
+    daily-outgoing:
+      USD: 10000
+      EUR: 10000
+      KHR: 40000000
+  mail:
+    from: "Lime Bank <no-reply@lime.local>"
   login-rate-limit:
     # Failed logins allowed per (email + IP) and per IP within the window.
     max-failures-per-account: 5

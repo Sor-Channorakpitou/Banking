@@ -1,6 +1,15 @@
 # Real database. Values come from environment variables. The DB defaults match
 # docker-compose.yml; JWT_SECRET has no default and must always be provided.
 spring:
+  # Real email delivery when MAIL_HOST is set (e.g. smtp-relay.brevo.com); otherwise emails go to the log.
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/bank}
     username: ${DB_USERNAME:bank}
@@ -10,6 +19,12 @@ app:
   jwt:
     # No default on purpose: the app refuses to start without a real secret.
     secret: ${JWT_SECRET}
+  security:
+    # No default on purpose, like JWT_SECRET.
+    data-key: ${DATA_ENCRYPTION_KEY}
+    cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  mail:
+    from: ${MAIL_FROM:Lime Bank <no-reply@lime.local>}
   admin:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}

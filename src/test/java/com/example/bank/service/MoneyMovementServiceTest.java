@@ -1,5 +1,7 @@
 package com.example.bank.service;
 
+import com.example.bank.config.LimitsProperties;
+import com.example.bank.config.SecurityProperties;
 import com.example.bank.domain.Account;
 import com.example.bank.domain.AccountType;
 import com.example.bank.domain.EntryDirection;
@@ -32,6 +34,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,7 +85,9 @@ class MoneyMovementServiceTest {
     void setUp() {
         service = new MoneyMovementService(accountRepository, ledgerEntryRepository, transactionRepository,
                 userRepository, auditService, metrics,
-                new MoneyRules(accountRepository, ledgerEntryRepository));
+                new MoneyRules(accountRepository, ledgerEntryRepository, userRepository,
+                        new SecurityProperties(false, "unused", Duration.ofMinutes(15), 5, null),
+                        new LimitsProperties(null)));
         aliceUsd = account(10L, alice, "USD");
         bobUsd = account(20L, bob, "USD");
         bobKhr = account(30L, bob, "KHR");
