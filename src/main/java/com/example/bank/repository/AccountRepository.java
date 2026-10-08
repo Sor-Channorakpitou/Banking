@@ -1,6 +1,7 @@
 package com.example.bank.repository;
 
 import com.example.bank.domain.Account;
+import com.example.bank.domain.AccountType;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,19 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Page<Account> findAllByOrderByIdAsc(Pageable pageable);
 
     Optional<Account> findByAccountNumber(String accountNumber);
+
+    Optional<Account> findByTypeAndCurrency(AccountType type, String currency);
+
+    /**
+     * Only the ID, on purpose. Loading the entity here, before it's locked, would
+     * put a possibly stale copy in Hibernate's session cache, and the later locking
+     * query would hand back that stale copy instead of fresh data.
+     */
+    @Query("""
+            select a.id from Account a
+            where a.accountNumber = :accountNumber and a.type = com.example.bank.domain.AccountType.CUSTOMER
+            """)
+    Optional<Long> findCustomerAccountIdByNumber(String accountNumber);
 
     /**
      * SELECT ... FOR UPDATE: the row stays locked until the current transaction

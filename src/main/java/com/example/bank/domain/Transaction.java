@@ -4,9 +4,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
@@ -46,20 +49,35 @@ public class Transaction {
     @Column(length = 255)
     private String description;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "initiated_by_id", nullable = false, updatable = false)
+    private User initiatedBy;
+
+    /** SHA-256 of the request, used to spot an idempotency key reused for a different request. */
+    @Column(name = "request_fingerprint", nullable = false, length = 64, updatable = false)
+    private String requestFingerprint;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     protected Transaction() {
     }
 
-    public Transaction(TransactionType type, BigDecimal amount, String currency,
-                       String idempotencyKey, String description) {
+    /**
+     * Created as COMPLETED: the transaction row and its ledger entries are written
+     * in one database transaction, so if this row is visible, the money has moved.
+     * A failed attempt rolls back and leaves nothing behind.
+     */
+    public Transaction(TransactionType type, BigDecimal amount, String currency, String idempotencyKey,
+                       String description, User initiatedBy, String requestFingerprint) {
         this.type = type;
         this.amount = amount;
         this.currency = currency;
         this.idempotencyKey = idempotencyKey;
         this.description = description;
-        this.status = TransactionStatus.PENDING;
+        this.initiatedBy = initiatedBy;
+        this.requestFingerprint = requestFingerprint;
+        this.status = TransactionStatus.COMPLETED;
     }
 
     @PrePersist
@@ -93,6 +111,14 @@ public class Transaction {
 
     public String getDescription() {
         return description;
+    }
+
+    public User getInitiatedBy() {
+        return initiatedBy;
+    }
+
+    public String getRequestFingerprint() {
+        return requestFingerprint;
     }
 
     public Instant getCreatedAt() {

@@ -4,6 +4,7 @@ import com.example.bank.config.AccountProperties;
 import com.example.bank.domain.Account;
 import com.example.bank.domain.User;
 import com.example.bank.dto.AccountResponse;
+import com.example.bank.dto.AccountTransactionResponse;
 import com.example.bank.dto.OpenAccountRequest;
 import com.example.bank.dto.PageResponse;
 import com.example.bank.exception.BusinessRuleException;
@@ -68,6 +69,15 @@ public class AccountService {
         return AccountResponse.from(account, ledgerEntryRepository.balanceOf(account.getId()));
     }
 
+    /** Owner or admin; newest first. */
+    @Transactional(readOnly = true)
+    public PageResponse<AccountTransactionResponse> history(AuthenticatedUser caller, Long accountId,
+                                                            int page, int size) {
+        Account account = findAccessible(caller, accountId);
+        return PageResponse.from(ledgerEntryRepository.findHistory(account.getId(), PageRequest.of(page, size))
+                .map(AccountTransactionResponse::from));
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<AccountResponse> listAll(int page, int size) {
         Page<Account> accounts = accountRepository.findAllByOrderByIdAsc(PageRequest.of(page, size));
@@ -118,8 +128,13 @@ public class AccountService {
     }
 
     private Account lock(Long accountId) {
-        return accountRepository.findByIdForUpdate(accountId)
+        Account account = accountRepository.findByIdForUpdate(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account", accountId));
+        if (!account.isCustomerAccount()) {
+            throw new BusinessRuleException(ErrorCode.ACCOUNT_STATE_CONFLICT,
+                    "Internal bank accounts can't be frozen or closed");
+        }
+        return account;
     }
 
     private List<AccountResponse> withBalances(List<Account> accounts) {

@@ -33,8 +33,13 @@ public class Account {
     @Column(name = "account_number", nullable = false, unique = true, length = 34)
     private String accountNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20, updatable = false)
+    private AccountType type;
+
+    /** Null for the bank's internal (CASH) accounts. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
     private User owner;
 
     /** ISO 4217 code, e.g. "USD". */
@@ -59,11 +64,22 @@ public class Account {
     protected Account() {
     }
 
+    /** A customer account. */
     public Account(String accountNumber, User owner, String currency) {
+        this(AccountType.CUSTOMER, accountNumber, owner, currency);
+    }
+
+    private Account(AccountType type, String accountNumber, User owner, String currency) {
+        this.type = type;
         this.accountNumber = accountNumber;
         this.owner = owner;
         this.currency = currency;
         this.status = AccountStatus.ACTIVE;
+    }
+
+    /** The bank's cash account for one currency, e.g. "CASH-USD". */
+    public static Account cash(String currency) {
+        return new Account(AccountType.CASH, "CASH-" + currency, null, currency);
     }
 
     @PrePersist
@@ -97,6 +113,10 @@ public class Account {
         return status == AccountStatus.ACTIVE;
     }
 
+    public boolean isCustomerAccount() {
+        return type == AccountType.CUSTOMER;
+    }
+
     public boolean isOwnedBy(Long userId) {
         return owner != null && owner.getId().equals(userId);
     }
@@ -114,6 +134,10 @@ public class Account {
 
     public String getAccountNumber() {
         return accountNumber;
+    }
+
+    public AccountType getType() {
+        return type;
     }
 
     public User getOwner() {

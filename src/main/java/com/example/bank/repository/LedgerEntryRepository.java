@@ -1,6 +1,8 @@
 package com.example.bank.repository;
 
 import com.example.bank.domain.LedgerEntry;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -32,6 +34,20 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
             group by e.account.id
             """)
     List<AccountBalance> balancesOf(Collection<Long> accountIds);
+
+    List<LedgerEntry> findByTransactionIdOrderByIdAsc(Long transactionId);
+
+    /**
+     * One account's entries, newest first, with their transaction loaded in the
+     * same query ("join fetch") to avoid one extra query per row (the N+1 problem).
+     */
+    @Query(value = """
+            select e from LedgerEntry e join fetch e.transaction
+            where e.account.id = :accountId
+            order by e.createdAt desc, e.id desc
+            """,
+            countQuery = "select count(e) from LedgerEntry e where e.account.id = :accountId")
+    Page<LedgerEntry> findHistory(Long accountId, Pageable pageable);
 
     /** Spring Data projection: one row of {@link #balancesOf}. */
     interface AccountBalance {
