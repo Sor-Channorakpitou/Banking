@@ -43,6 +43,13 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("select a from Account a where a.id = :id")
     Optional<Account> findByIdForUpdate(Long id);
 
+    /** A customer account with its owner loaded, for showing who an account belongs to. */
+    @Query("""
+            select a from Account a join fetch a.owner
+            where a.accountNumber = :accountNumber and a.type = com.example.bank.domain.AccountType.CUSTOMER
+            """)
+    Optional<Account> findCustomerAccountWithOwner(String accountNumber);
+
     @Query(value = "SELECT nextval('account_number_seq')", nativeQuery = true)
     long nextAccountNumber();
 }

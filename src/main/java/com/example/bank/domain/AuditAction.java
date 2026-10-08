@@ -16,5 +16,7 @@ public enum AuditAction {
     WITHDRAWAL,
     TRANSFER,
     EXCHANGE,
-    EXCHANGE_RATE_SET
+    EXCHANGE_RATE_SET,
+    PAYEE_ADDED,
+    PAYEE_REMOVED
 }
