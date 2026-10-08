@@ -37,9 +37,11 @@ management:
     health:
       show-details: always
 
-# Application settings (bound to com.example.bank.config.JwtProperties / AdminProperties).
+# Application settings, bound to the @ConfigurationProperties records in com.example.bank.config.
 app:
   jwt:
     issuer: core-banking
     access-token-ttl: 15m
     # secret: set per profile. Never commit a real secret; production reads JWT_SECRET.
+  accounts:
+    supported-currencies: [USD, EUR, KHR]

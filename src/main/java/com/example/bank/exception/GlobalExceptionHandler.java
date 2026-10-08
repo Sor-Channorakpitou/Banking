@@ -1,7 +1,6 @@
 package com.example.bank.exception;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -15,26 +14,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Turns exceptions into RFC 9457 "problem detail" JSON bodies. Extending
- * ResponseEntityExceptionHandler covers Spring MVC's own errors (malformed JSON,
- * wrong HTTP method, ...). Phase 5 expands this into the full error contract.
+ * Turns exceptions into RFC 9457 "problem detail" JSON bodies, each with a stable
+ * {@code code} property. Extending ResponseEntityExceptionHandler covers Spring
+ * MVC's own errors (malformed JSON, wrong HTTP method, missing header, ...).
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(EmailAlreadyUsedException.class)
-    ProblemDetail handleEmailAlreadyUsed(EmailAlreadyUsedException ex) {
-        return problem(HttpStatus.CONFLICT, "Email already registered", ex.getMessage());
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
-        return problem(HttpStatus.UNAUTHORIZED, "Invalid credentials", ex.getMessage());
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    ProblemDetail handleNotFound(ResourceNotFoundException ex) {
-        return problem(HttpStatus.NOT_FOUND, "Resource not found", ex.getMessage());
+    @ExceptionHandler(BankException.class)
+    ResponseEntity<ProblemDetail> handleBankException(BankException ex) {
+        return respond(ex.getErrorCode(), ex.getMessage());
     }
 
     /** Bean Validation failures (@Valid): report every invalid field at once. */
@@ -46,15 +35,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         Map<String, String> errors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors()
                 .forEach(e -> errors.putIfAbsent(e.getField(), e.getDefaultMessage()));
-        ProblemDetail body = problem(HttpStatus.BAD_REQUEST, "Validation failed",
-                "One or more fields are invalid");
+        ProblemDetail body = ProblemDetails.of(ErrorCode.VALIDATION_FAILED, "One or more fields are invalid");
         body.setProperty("errors", errors);
-        return ResponseEntity.badRequest().body(body);
+        return ResponseEntity.status(ErrorCode.VALIDATION_FAILED.status()).body(body);
     }
 
-    private static ProblemDetail problem(HttpStatus status, String title, String detail) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
-        problem.setTitle(title);
-        return problem;
+    private static ResponseEntity<ProblemDetail> respond(ErrorCode code, String detail) {
+        return ResponseEntity.status(code.status()).body(ProblemDetails.of(code, detail));
     }
 }

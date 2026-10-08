@@ -3,7 +3,7 @@
 # works on both databases.
 spring:
   datasource:
-    url: jdbc:h2:file:./data/bankdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:h2:file:./data/bankdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;LOCK_TIMEOUT=10000
     username: sa
     password:
   h2:

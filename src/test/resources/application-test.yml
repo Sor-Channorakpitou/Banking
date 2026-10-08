@@ -1,7 +1,7 @@
 # Tests use a throwaway in-memory H2 database (fresh for each JVM).
 spring:
   datasource:
-    url: jdbc:h2:mem:bank-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:bank-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;LOCK_TIMEOUT=10000;DB_CLOSE_DELAY=-1
     username: sa
     password:
 

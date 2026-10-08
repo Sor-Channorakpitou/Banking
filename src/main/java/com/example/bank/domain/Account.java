@@ -1,5 +1,7 @@
 package com.example.bank.domain;
 
+import com.example.bank.exception.BusinessRuleException;
+import com.example.bank.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -67,6 +69,43 @@ public class Account {
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();
+    }
+
+    // State changes go through methods that enforce the allowed transitions:
+    //   ACTIVE <-> FROZEN, and ACTIVE/FROZEN -> CLOSED (final).
+
+    public void freeze() {
+        requireStatus(AccountStatus.ACTIVE, "freeze");
+        status = AccountStatus.FROZEN;
+    }
+
+    public void unfreeze() {
+        requireStatus(AccountStatus.FROZEN, "unfreeze");
+        status = AccountStatus.ACTIVE;
+    }
+
+    /** Callers must check the balance is zero first (that needs the ledger). */
+    public void close() {
+        if (status == AccountStatus.CLOSED) {
+            throw new BusinessRuleException(ErrorCode.ACCOUNT_STATE_CONFLICT,
+                    "Account " + accountNumber + " is already closed");
+        }
+        status = AccountStatus.CLOSED;
+    }
+
+    public boolean isActive() {
+        return status == AccountStatus.ACTIVE;
+    }
+
+    public boolean isOwnedBy(Long userId) {
+        return owner != null && owner.getId().equals(userId);
+    }
+
+    private void requireStatus(AccountStatus required, String action) {
+        if (status != required) {
+            throw new BusinessRuleException(ErrorCode.ACCOUNT_STATE_CONFLICT,
+                    "Cannot " + action + " account " + accountNumber + " in status " + status);
+        }
     }
 
     public Long getId() {
