@@ -1,5 +1,6 @@
 package com.example.bank.config;
 
+import com.example.bank.security.AuthenticatedUserMdcFilter;
 import com.example.bank.security.JwtAuthenticationConverter;
 import com.example.bank.security.ProblemDetailsAccessDeniedHandler;
 import com.example.bank.security.ProblemDetailsAuthenticationEntryPoint;
@@ -22,6 +23,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -47,8 +49,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
+                                "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
+                        // metrics, prometheus, info: operational data, admins only
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // API docs (Swagger UI and the OpenAPI JSON it reads)
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Spring forwards errors to /error; let that through so clients see the real status.
@@ -63,7 +68,8 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth -> oauth
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
+                .addFilterAfter(new AuthenticatedUserMdcFilter(), BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 

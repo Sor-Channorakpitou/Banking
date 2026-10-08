@@ -61,11 +61,13 @@ public class MoneyMovementService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final BankMetrics metrics;
 
     public MoneyMovementService(AccountRepository accountRepository, LedgerEntryRepository ledgerEntryRepository,
                                 TransactionRepository transactionRepository, UserRepository userRepository,
-                                AuditService auditService) {
+                                AuditService auditService, BankMetrics metrics) {
         this.auditService = auditService;
+        this.metrics = metrics;
         this.accountRepository = accountRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.transactionRepository = transactionRepository;
@@ -194,6 +196,7 @@ public class MoneyMovementService {
         auditService.success(AuditAction.valueOf(type.name()), caller.id(), "TRANSACTION", tx.getId(),
                 "amount=" + amount.toPlainString() + " " + currency
                         + " from=" + response.fromAccountNumber() + " to=" + response.toAccountNumber());
+        metrics.moneyMovementCompleted(type, amount, currency);
         return new MoneyMovementResult(response, false);
     }
 
@@ -210,6 +213,7 @@ public class MoneyMovementService {
                         "This Idempotency-Key was already used for a different request");
             }
             List<LedgerEntry> entries = ledgerEntryRepository.findByTransactionIdOrderByIdAsc(tx.getId());
+            metrics.moneyMovementReplayed(tx.getType());
             return new MoneyMovementResult(TransactionResponse.from(tx, entries), true);
         });
     }

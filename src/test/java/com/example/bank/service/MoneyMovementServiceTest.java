@@ -62,6 +62,8 @@ class MoneyMovementServiceTest {
     private UserRepository userRepository;
     @Mock
     private AuditService auditService;
+    @Mock
+    private BankMetrics metrics;
 
     private MoneyMovementService service;
 
@@ -79,7 +81,7 @@ class MoneyMovementServiceTest {
     @BeforeEach
     void setUp() {
         service = new MoneyMovementService(accountRepository, ledgerEntryRepository, transactionRepository,
-                userRepository, auditService);
+                userRepository, auditService, metrics);
         aliceUsd = account(10L, alice, "USD");
         bobUsd = account(20L, bob, "USD");
         bobKhr = account(30L, bob, "KHR");

@@ -27,21 +27,38 @@ server:
   error:
     include-stacktrace: never
 
+logging:
+  pattern:
+    # Every log line carries the request ID (and user ID once authenticated), so all
+    # lines for one request can be found together. Set by RequestIdFilter.
+    level: "%5p [req=%X{requestId:-} user=%X{userId:-}]"
+
 management:
   endpoints:
     web:
       exposure:
-        # Only health for now; metrics are added in Phase 6.
-        include: health
+        # health is public; the rest require ADMIN (see SecurityConfig).
+        include: health, info, metrics, prometheus
   endpoint:
     health:
-      show-details: always
+      # Component details (DB, disk) only for admins; everyone else sees just UP/DOWN.
+      show-details: when-authorized
+      roles: ADMIN
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 # Application settings, bound to the @ConfigurationProperties records in com.example.bank.config.
 app:
   jwt:
     issuer: core-banking
     access-token-ttl: 15m
+    refresh-token-ttl: 7d
     # secret: set per profile. Never commit a real secret; production reads JWT_SECRET.
   accounts:
     supported-currencies: [USD, EUR, KHR]
+  login-rate-limit:
+    # Failed logins allowed per (email + IP) and per IP within the window.
+    max-failures-per-account: 5
+    max-failures-per-ip: 20
+    window: 15m

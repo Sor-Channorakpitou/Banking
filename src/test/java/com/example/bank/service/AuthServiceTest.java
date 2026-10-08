@@ -9,6 +9,8 @@ import com.example.bank.dto.UserResponse;
 import com.example.bank.exception.EmailAlreadyUsedException;
 import com.example.bank.exception.InvalidCredentialsException;
 import com.example.bank.repository.UserRepository;
+import com.example.bank.security.LoginRateLimiter;
+import com.example.bank.security.RefreshTokenService;
 import com.example.bank.security.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,13 +48,20 @@ class AuthServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
+    @Mock
+    private LoginRateLimiter loginRateLimiter;
+
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
 
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder, tokenService, auditService);
+        authService = new AuthService(userRepository, passwordEncoder, tokenService, refreshTokenService,
+                loginRateLimiter, auditService);
     }
 
     @Test
@@ -99,12 +108,15 @@ class AuthServiceTest {
         User user = new User("Alice", "alice@example.com", passwordEncoder.encode("password123"), Role.CUSTOMER);
         when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
         when(tokenService.issueAccessToken(user)).thenReturn(new TokenService.IssuedToken("jwt-value", 900));
+        when(refreshTokenService.issue(user))
+                .thenReturn(new RefreshTokenService.IssuedRefreshToken("refresh-value", 604800));
 
-        AuthResponse response = authService.login(new LoginRequest("ALICE@example.com", "password123"));
+        AuthResponse response = authService.login(new LoginRequest("ALICE@example.com", "password123"), "127.0.0.1");
 
         assertThat(response.accessToken()).isEqualTo("jwt-value");
         assertThat(response.tokenType()).isEqualTo("Bearer");
         assertThat(response.expiresIn()).isEqualTo(900);
+        assertThat(response.refreshToken()).isEqualTo("refresh-value");
     }
 
     @Test
@@ -112,7 +124,7 @@ class AuthServiceTest {
         User user = new User("Alice", "alice@example.com", passwordEncoder.encode("password123"), Role.CUSTOMER);
         when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("alice@example.com", "wrong-password")))
+        assertThatThrownBy(() -> authService.login(new LoginRequest("alice@example.com", "wrong-password"), "127.0.0.1"))
                 .isInstanceOf(InvalidCredentialsException.class);
         verify(tokenService, never()).issueAccessToken(any());
     }
@@ -121,7 +133,7 @@ class AuthServiceTest {
     void loginRejectsUnknownEmailWithSameError() {
         when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("nobody@example.com", "password123")))
+        assertThatThrownBy(() -> authService.login(new LoginRequest("nobody@example.com", "password123"), "127.0.0.1"))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid email or password");
     }

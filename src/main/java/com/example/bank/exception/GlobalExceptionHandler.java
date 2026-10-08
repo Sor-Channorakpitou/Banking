@@ -1,5 +1,6 @@
 package com.example.bank.exception;
 
+import com.example.bank.service.BankMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSourceResolvable;
@@ -41,8 +42,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    private final BankMetrics metrics;
+
+    public GlobalExceptionHandler(BankMetrics metrics) {
+        this.metrics = metrics;
+    }
+
     @ExceptionHandler(BankException.class)
     ResponseEntity<ProblemDetail> handleBankException(BankException ex) {
+        metrics.businessError(ex.getErrorCode());
+        if (ex instanceof RateLimitExceededException limited) {
+            return ResponseEntity.status(ex.getErrorCode().status())
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(limited.getRetryAfterSeconds()))
+                    .body(ProblemDetails.of(ex.getErrorCode(), ex.getMessage()));
+        }
         return respond(ex.getErrorCode(), ex.getMessage());
     }
 

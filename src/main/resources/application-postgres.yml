@@ -14,3 +14,10 @@ app:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
     full-name: ${ADMIN_FULL_NAME:Bank Administrator}
+
+logging:
+  structured:
+    format:
+      # One JSON object per line (Elastic Common Schema), ready for a log pipeline
+      # (ELK, Loki, CloudWatch...). MDC values like requestId become JSON fields.
+      console: ecs

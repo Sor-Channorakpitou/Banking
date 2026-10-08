@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,6 +49,23 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
             """,
             countQuery = "select count(e) from LedgerEntry e where e.account.id = :accountId")
     Page<LedgerEntry> findHistory(Long accountId, Pageable pageable);
+
+    /** Balance as of a moment: the sum of every entry created before it. */
+    @Query("""
+            select coalesce(sum(case when e.direction = com.example.bank.domain.EntryDirection.CREDIT
+                                     then e.amount else -e.amount end), 0)
+            from LedgerEntry e
+            where e.account.id = :accountId and e.createdAt < :before
+            """)
+    BigDecimal balanceBefore(Long accountId, Instant before);
+
+    /** Entries in [from, to), oldest first, as a statement lists them. */
+    @Query("""
+            select e from LedgerEntry e join fetch e.transaction
+            where e.account.id = :accountId and e.createdAt >= :from and e.createdAt < :to
+            order by e.createdAt asc, e.id asc
+            """)
+    List<LedgerEntry> findForPeriod(Long accountId, Instant from, Instant to);
 
     /** Spring Data projection: one row of {@link #balancesOf}. */
     interface AccountBalance {

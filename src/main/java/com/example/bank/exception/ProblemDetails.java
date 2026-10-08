@@ -1,5 +1,7 @@
 package com.example.bank.exception;
 
+import com.example.bank.config.RequestIdFilter;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -16,7 +18,8 @@ import java.time.Instant;
  *   "detail": "Insufficient funds in account 10000000009: balance 70.00, requested 500",
  *   "instance": "/api/accounts/4/withdraw",
  *   "code": "INSUFFICIENT_FUNDS",
- *   "timestamp": "2026-10-08T13:39:35.6Z"
+ *   "timestamp": "2026-10-08T13:39:35.6Z",
+ *   "requestId": "4f7c2a9e-..."
  * }
  * </pre>
  */
@@ -30,6 +33,7 @@ public final class ProblemDetails {
         problem.setTitle(code.title());
         problem.setProperty("code", code.name());
         problem.setProperty("timestamp", Instant.now());
+        addRequestId(problem);
         return problem;
     }
 
@@ -46,6 +50,15 @@ public final class ProblemDetails {
         }
         if (problem.getProperties() == null || !problem.getProperties().containsKey("timestamp")) {
             problem.setProperty("timestamp", Instant.now());
+        }
+        addRequestId(problem);
+    }
+
+    /** The same ID as the X-Request-Id response header and the log lines of this request. */
+    private static void addRequestId(ProblemDetail problem) {
+        String requestId = MDC.get(RequestIdFilter.MDC_REQUEST_ID);
+        if (requestId != null) {
+            problem.setProperty("requestId", requestId);
         }
     }
 }

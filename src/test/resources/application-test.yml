@@ -12,3 +12,8 @@ app:
     email: admin@test.local
     password: Admin123!
     full-name: Test Admin
+
+management:
+  endpoint:
+    health:
+      show-details: always

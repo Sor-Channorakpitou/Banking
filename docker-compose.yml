@@ -1,11 +1,15 @@
-# Phase 1: just PostgreSQL. The app itself is containerized in Phase 6.
+# Full stack: PostgreSQL + the app.
+#   cp .env.example .env    # then set JWT_SECRET (and the admin password)
+#   docker compose up --build
+# Database only (to run the app from your IDE with the "postgres" profile):
+#   docker compose up -d postgres
 services:
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: bank
       POSTGRES_USER: bank
-      POSTGRES_PASSWORD: bank
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bank}
     ports:
       - "5432:5432"
     volumes:
@@ -15,6 +19,23 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy   # start only once the DB accepts connections
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/bank
+      DB_USERNAME: bank
+      DB_PASSWORD: ${DB_PASSWORD:-bank}
+      # Required: compose refuses to start without it (no insecure default).
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (openssl rand -base64 32)}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "8080:8080"
 
 volumes:
   pgdata:

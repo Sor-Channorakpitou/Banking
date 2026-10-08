@@ -28,7 +28,7 @@ class TokenServiceTest {
     private static final SecretKey KEY =
             new SecretKeySpec("0123456789abcdef0123456789abcdef".getBytes(), "HmacSHA256");
     private static final JwtProperties PROPS =
-            new JwtProperties("unused-here", "core-banking", Duration.ofMinutes(15));
+            new JwtProperties("unused-here", "core-banking", Duration.ofMinutes(15), Duration.ofDays(7));
 
     private final NimbusJwtDecoder decoder = decoder();
 

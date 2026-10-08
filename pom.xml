@@ -53,6 +53,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Metrics in Prometheus format at /actuator/prometheus -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- OpenAPI 3 spec generated from the controllers + Swagger UI at /swagger-ui.html -->
         <dependency>
             <groupId>org.springdoc</groupId>

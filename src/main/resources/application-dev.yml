@@ -21,3 +21,8 @@ app:
     email: admin@bank.local
     password: Admin123!
     full-name: Bank Administrator
+
+management:
+  endpoint:
+    health:
+      show-details: always
